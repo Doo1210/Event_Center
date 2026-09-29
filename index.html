@@ -307,6 +307,8 @@
     .action-item-controls button { width: 18px; height: 18px; padding: 0; color: #8b9bb1; border: 0; border-radius: 4px; background: transparent; font-size: 11px; }
     .action-item-controls button:hover { color: #3976f6; background: #eaf1ff; }
     .action-item-controls button[data-remove-action]:hover { color: #d95757; background: #fff0f0; }
+    .flow-panel .action-item-controls .view-action-btn { width: auto; height: 24px; padding: 0 7px; color: #326bdc; border: 1px solid #d3e0f8; border-radius: 5px; background: #fff; font-size: 10px; font-weight: 650; white-space: nowrap; }
+    .flow-panel .action-item-controls .view-action-btn:hover { border-color: #9dbbf0; background: #eef4ff; }
     .add-action-chip { width: 100%; min-height: 64px; padding: 9px 11px; color: #3970dc; border: 1px dashed #c6d8f5; border-radius: 6px; background: #f7faff; font-size: 12px; font-weight: 650; }
     .add-action-chip:hover { border-color: #8fb2ee; background: #eef5ff; }
     .action-add-row { min-width: 0; width: 100%; display: flex; }
@@ -442,6 +444,9 @@
     .modal.confirm-dialog .modal-foot { min-height: 62px; padding: 12px 22px; flex: none; }
     .modal.action-dialog { width: min(980px,calc(100vw - 28px)); height: min(620px,calc(100vh - 32px)); height: min(620px,calc(100dvh - 32px)); max-height: min(620px,calc(100dvh - 32px)); display: flex; flex-direction: column; overflow: hidden; }
     .modal.action-dialog.action-edit-dialog { width: min(720px,calc(100vw - 28px)); height: min(620px,calc(100dvh - 32px)); max-height: min(620px,calc(100dvh - 32px)); }
+    .modal.action-readonly-dialog .modal-head h3 { display: flex; align-items: center; gap: 9px; }
+    .modal.action-readonly-dialog .action-map-table :is(input[readonly],select:disabled) { color: #526882; border-color: #e3e9f2; background: #f8fafd; opacity: 1; cursor: default; }
+    .modal.action-readonly-dialog .action-prompt-wrap textarea[readonly] { background: #f8fafd; cursor: default; }
     .modal.action-dialog .modal-head,.modal.action-dialog .modal-foot { flex: none; }
     .modal.action-dialog .modal-body { min-height: 0; padding: 14px; flex: 1; overflow: hidden; }
     .action-dialog-layout.is-edit { min-height: 0; height: 100%; display: block; }
@@ -1186,7 +1191,7 @@
         const branchType=!showBranchLogic?"":fallback?"ELSE":conditionBranchNumber++===0?"IF":"ELSE IF";
         const branchClass=fallback?"else-label":branchType==="IF"?"if-label":"else-if-label";
         const conds=(b.conditions||[]).map(function(c,j){return (j?'<span class="logic">'+esc(b.logic||"且")+'</span>':'')+'<span class="condition-pill">'+esc(c)+'</span>';}).join("");
-        const actions=(b.actions||[]).map(function(a,j){const summary=actionSummary(a),toolNames=toolActionNames(a);const name=toolNames&&toolNames.tool?'<strong class="action-card-parent" title="'+esc(toolNames.tool)+'">'+esc(toolNames.tool)+'</strong><span class="action-card-separator">/</span><span class="action-card-operation" title="'+esc(toolNames.operation)+'">'+esc(toolNames.operation)+'</span>':'<strong title="'+esc(a.name)+'">'+esc(a.name)+'</strong>';const typeLabel='<span class="action-card-type">'+actionTypeName(a.type)+'</span>';const title=a.type==="tool"&&toolNames&&toolNames.tool?name+typeLabel:typeLabel+name;return '<div class="action-item"><div class="action-card-main"><span class="action-type-icon '+esc(a.type)+'">'+actionIcon(a.type)+'</span>'+title+'</div>'+(editable?'<span class="action-item-controls"><button type="button" data-edit-action="'+i+':'+j+'" aria-label="编辑动作 '+esc(a.name)+'" title="编辑动作">✎</button><button type="button" data-remove-action="'+i+':'+j+'" aria-label="移除动作 '+esc(a.name)+'" title="移除动作">×</button></span>':'')+'<div class="action-card-summary" title="'+esc(summary)+'">'+esc(summary)+'</div></div>';}).join("");
+        const actions=(b.actions||[]).map(function(a,j){const summary=actionSummary(a),toolNames=toolActionNames(a);const name=toolNames&&toolNames.tool?'<strong class="action-card-parent" title="'+esc(toolNames.tool)+'">'+esc(toolNames.tool)+'</strong><span class="action-card-separator">/</span><span class="action-card-operation" title="'+esc(toolNames.operation)+'">'+esc(toolNames.operation)+'</span>':'<strong title="'+esc(a.name)+'">'+esc(a.name)+'</strong>';const typeLabel='<span class="action-card-type">'+actionTypeName(a.type)+'</span>';const title=a.type==="tool"&&toolNames&&toolNames.tool?name+typeLabel:typeLabel+name;const controls=editable?'<span class="action-item-controls"><button type="button" data-edit-action="'+i+':'+j+'" aria-label="编辑动作 '+esc(a.name)+'" title="编辑动作">✎</button><button type="button" data-remove-action="'+i+':'+j+'" aria-label="移除动作 '+esc(a.name)+'" title="移除动作">×</button></span>':'<span class="action-item-controls"><button type="button" class="view-action-btn" data-view-action="'+i+':'+j+'" aria-label="查看动作 '+esc(a.name)+' 的配置">查看配置</button></span>';return '<div class="action-item"><div class="action-card-main"><span class="action-type-icon '+esc(a.type)+'">'+actionIcon(a.type)+'</span>'+title+'</div>'+controls+'<div class="action-card-summary" title="'+esc(summary)+'">'+esc(summary)+'</div></div>';}).join("");
         const upIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 16 9-9 9 9"/></svg>';
         const downIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 9 9 9-9"/></svg>';
         const moveButtons=!fallback&&conditionalCount>1?'<span class="move-guard '+(i===0?"disabled":"")+'" data-tooltip="'+(i===0?"已是第一个条件分支":"上移分支")+'" '+(i===0?'tabindex="0"':'')+'><button type="button" class="move-icon-btn" data-move-branch="'+i+'" data-direction="-1" aria-label="上移分支" '+(i===0?"disabled":"")+'>'+upIcon+'</button></span><span class="move-guard '+(i===conditionalCount-1?"disabled":"")+'" data-tooltip="'+(i===conditionalCount-1?"已是最后一个条件分支":"下移分支")+'" '+(i===conditionalCount-1?'tabindex="0"':'')+'><button type="button" class="move-icon-btn" data-move-branch="'+i+'" data-direction="1" aria-label="下移分支" '+(i===conditionalCount-1?"disabled":"")+'>'+downIcon+'</button></span>':"";
@@ -1239,6 +1244,7 @@
       document.querySelectorAll("[data-edit-branch]").forEach(function(btn){btn.addEventListener("click",function(){showBranchModal(Number(btn.dataset.editBranch));});});
       document.querySelectorAll("[data-add-action]").forEach(function(btn){btn.addEventListener("click",function(){showActionModal(Number(btn.dataset.addAction));});});
       document.querySelectorAll("[data-edit-action]").forEach(function(btn){btn.addEventListener("click",function(){const parts=btn.dataset.editAction.split(":").map(Number);showActionModal(parts[0],parts[1]);});});
+      document.querySelectorAll("[data-view-action]").forEach(function(btn){btn.addEventListener("click",function(){const parts=btn.dataset.viewAction.split(":").map(Number);showActionModal(parts[0],parts[1],true);});});
       document.querySelectorAll("[data-remove-action]").forEach(function(btn){btn.addEventListener("click",function(){
         const parts=btn.dataset.removeAction.split(":").map(Number),branch=e.draft.branches[parts[0]],action=branch&&(branch.actions||[])[parts[1]];
         if(!action)return;
@@ -1452,7 +1458,7 @@
       menu.style.left=left+"px";
       menu.style.top=Math.max(8,top)+"px";
     }
-    function closeModal(){document.getElementById("modalBackdrop").classList.remove("open");document.getElementById("modal").classList.remove("event-dialog","stats-dialog","test-dialog","run-detail-dialog","publish-dialog","action-dialog","action-edit-dialog","confirm-dialog");document.querySelectorAll("#modalBackdrop .action-prompt-popup").forEach(function(popup){popup.remove();});modalAction=null;}
+    function closeModal(){document.getElementById("modalBackdrop").classList.remove("open");document.getElementById("modal").classList.remove("event-dialog","stats-dialog","test-dialog","run-detail-dialog","publish-dialog","action-dialog","action-edit-dialog","action-readonly-dialog","confirm-dialog");document.querySelectorAll("#modalBackdrop .action-prompt-popup").forEach(function(popup){popup.remove();});modalAction=null;}
     function openModal(title,body,foot,wide){
       document.getElementById("modalTitle").textContent=title;
       document.getElementById("modalBody").innerHTML=body;
@@ -1595,14 +1601,16 @@
         {id:"startReview",name:"代码评审工具",detail:"对指定仓库启动代码检查。",params:actionCatalog.tool[1].params}
       ]}
     ];
-    function showActionModal(branchIndex,actionIndex){
+    function showActionModal(branchIndex,actionIndex,readonly){
       const e=currentEvent();
-      if(!e.draft||selectedConfigView!=="draft"){showToast("请切换到草稿版本后配置动作");return;}
-      const branch=e.draft.branches[branchIndex];
+      readonly=!!readonly;
+      if(!readonly&&(!e.draft||selectedConfigView!=="draft")){showToast("请切换到草稿版本后配置动作");return;}
+      const branches=readonly?selectedConfigBranches(e):e.draft.branches;
+      const branch=branches[branchIndex];
       if(!branch)return;
-      branch.actions=branch.actions||[];
+      if(!readonly)branch.actions=branch.actions||[];
       const editing=Number.isInteger(actionIndex),existing=editing?(branch.actions||[])[actionIndex]:null;
-      if(editing&&!existing)return;
+      if((editing||readonly)&&!existing)return;
       let type=existing&&actionCatalog[existing.type]?existing.type:"tool";
       function normalizeMappings(raw){
         const normalized={};
@@ -1610,7 +1618,7 @@
           const item=raw[key];
           if(item&&typeof item==="object"){
             const mode=item.mode||item.mapType||"event";
-            normalized[key]={mode:mode,value:String(item.value||item[mode==="fixed"?"fixedValue":"sourcePath"]||"")};
+            normalized[key]={mode:mode,value:String(item.value??item[mode==="fixed"?"fixedValue":"sourcePath"]??"")};
           }else normalized[key]={mode:"event",value:String(item||"")};
         });
         return normalized;
@@ -1633,11 +1641,12 @@
         }
         expandedToolId=selectedTool.id;selected=selectedOperation;
       }
-      const body=editing?'<div class="action-dialog-layout is-edit"><section class="action-config-panel" id="actionConfigPanel"></section></div>':'<div class="action-dialog-layout"><aside class="action-select-panel"><div class="action-select-head"><div class="action-type-tabs" id="actionTypeTabs"><button type="button" data-action-tab="tool">工具</button><button type="button" data-action-tab="workflow">工作流</button><button type="button" data-action-tab="agent">智能体</button><button type="button" data-action-tab="expert">专家</button></div></div><div class="action-search"><input class="field" id="actionResourceSearch" type="search" placeholder="搜索工具" autocomplete="off" aria-label="搜索执行动作"></div><div class="action-resource-list" id="actionResourceList"></div></aside><section class="action-config-panel" id="actionConfigPanel"></section></div>';
-      const foot='<span></span><div class="right"><button class="btn btn-small" data-close>取消</button><button class="btn btn-primary btn-small" id="saveAction">'+(editing?"保存动作":"添加执行动作")+'</button></div>';
-      openModal(editing?"编辑执行动作":"添加执行动作",body,foot,false);
+      const body=editing||readonly?'<div class="action-dialog-layout is-edit"><section class="action-config-panel" id="actionConfigPanel"></section></div>':'<div class="action-dialog-layout"><aside class="action-select-panel"><div class="action-select-head"><div class="action-type-tabs" id="actionTypeTabs"><button type="button" data-action-tab="tool">工具</button><button type="button" data-action-tab="workflow">工作流</button><button type="button" data-action-tab="agent">智能体</button><button type="button" data-action-tab="expert">专家</button></div></div><div class="action-search"><input class="field" id="actionResourceSearch" type="search" placeholder="搜索工具" autocomplete="off" aria-label="搜索执行动作"></div><div class="action-resource-list" id="actionResourceList"></div></aside><section class="action-config-panel" id="actionConfigPanel"></section></div>';
+      const foot=readonly?'<span></span><div class="right"><button class="btn btn-small" data-close>关闭</button></div>':'<span></span><div class="right"><button class="btn btn-small" data-close>取消</button><button class="btn btn-primary btn-small" id="saveAction">'+(editing?"保存动作":"添加执行动作")+'</button></div>';
+      openModal(readonly?"查看执行动作配置":editing?"编辑执行动作":"添加执行动作",body,foot,false);
       document.getElementById("modal").classList.add("action-dialog");
-      if(editing)document.getElementById("modal").classList.add("action-edit-dialog");
+      if(editing||readonly)document.getElementById("modal").classList.add("action-edit-dialog");
+      if(readonly){document.getElementById("modal").classList.add("action-readonly-dialog");document.getElementById("modalTitle").innerHTML='查看执行动作配置 <span class="readonly-badge">只读</span>';}
       const tabs=document.getElementById("actionTypeTabs"),search=document.getElementById("actionResourceSearch"),list=document.getElementById("actionResourceList"),right=document.getElementById("actionConfigPanel"),saveButton=document.getElementById("saveAction");
       const eventFields=["event_id","device_id","voltage","temperature","vibration","status","payload.device_id","payload.voltage","payload.status"];
       const isInputType=function(value){return value==="agent"||value==="expert";};
@@ -1706,13 +1715,13 @@
       function renderMappingTable(params){
         const rows=params.map(function(param){
           const map=mappings[param.key]||{mode:"event",value:""};
-          return '<tr><td><strong>'+(param.required===false?"":'<span style="color:#d95757">*</span>')+esc(param.key)+'</strong><small>'+esc(param.label)+'</small></td><td>'+esc(param.type||"String")+'</td><td><select data-param-mode="'+esc(param.key)+'"><option value="event" '+(map.mode==="event"?"selected":"")+'>事件字段</option><option value="fixed" '+(map.mode==="fixed"?"selected":"")+'>自定义值</option></select></td><td><input data-param-value="'+esc(param.key)+'" value="'+esc(map.value||"")+'" placeholder="'+(map.mode==="event"?"例如："+esc(param.example||"payload.field"):"输入自定义值")+'" '+(map.mode==="event"?'list="eventFieldSuggestions"':"")+'></td></tr>';
+          return '<tr><td><strong>'+(param.required===false?"":'<span style="color:#d95757">*</span>')+esc(param.key)+'</strong><small>'+esc(param.label)+'</small></td><td>'+esc(param.type||"String")+'</td><td><select data-param-mode="'+esc(param.key)+'" '+(readonly?'disabled aria-disabled="true"':"")+'><option value="event" '+(map.mode==="event"?"selected":"")+'>事件字段</option><option value="fixed" '+(map.mode==="fixed"?"selected":"")+'>自定义值</option></select></td><td><input data-param-value="'+esc(param.key)+'" value="'+esc(map.value||"")+'" placeholder="'+(readonly?"未配置":map.mode==="event"?"例如："+esc(param.example||"payload.field"):"输入自定义值")+'" '+(readonly?'readonly aria-readonly="true"':map.mode==="event"?'list="eventFieldSuggestions"':"")+'></td></tr>';
         }).join("");
-        return params.length?'<div class="table-scroll"><table class="action-map-table"><thead><tr><th>输入参数</th><th>类型</th><th>映射方式</th><th>参数值</th></tr></thead><tbody>'+rows+'</tbody></table></div><datalist id="eventFieldSuggestions">'+eventFields.map(function(field){return '<option value="'+esc(field)+'"></option>';}).join("")+'</datalist><p class="action-map-hint">事件字段可从建议中选择，也可手动输入字段路径。</p>':'<div class="action-config-empty"><strong>此动作无需输入参数</strong><span>选择后即可添加到处理流程</span></div>';
+        return params.length?'<div class="table-scroll"><table class="action-map-table"><thead><tr><th>输入参数</th><th>类型</th><th>映射方式</th><th>参数值</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(readonly?'':'<datalist id="eventFieldSuggestions">'+eventFields.map(function(field){return '<option value="'+esc(field)+'"></option>';}).join("")+'</datalist><p class="action-map-hint">事件字段可从建议中选择，也可手动输入字段路径。</p>'):'<div class="action-config-empty"><strong>此动作无需输入参数</strong>'+(readonly?'':'<span>选择后即可添加到处理流程</span>')+'</div>';
       }
       function renderActionConfig(){
         hidePromptPopup();
-        saveButton.disabled=type==="tool"?!selectedOperation:!selected;
+        if(saveButton)saveButton.disabled=type==="tool"?!selectedOperation:!selected;
         if(type==="tool"){
           if(!selectedTool){right.innerHTML='<div class="action-config-empty"><strong>请先在左侧选择工具</strong><span>展开工具后，选择要执行的操作</span></div>';return;}
           const toolHeader='<div class="action-config-head"><strong>'+esc(selectedTool.name)+'</strong><small>'+esc(selectedTool.description)+'</small></div>';
@@ -1724,11 +1733,12 @@
         if(!selected){right.innerHTML='<div class="action-config-empty"><strong>请先在左侧选择执行动作</strong><span>选中后将在这里配置对应的动作参数</span></div>';return;}
         const header='<div class="action-config-head"><strong>'+esc(selected.name)+' · '+actionTypeName(type)+'</strong><small>'+esc(selected.detail)+'</small></div>';
         if(isInputType(type)){
-          right.innerHTML=header+'<div class="action-config-body"><div class="action-prompt-head"><label for="actionPromptInput">指令 <span style="color:#d95757">*</span></label><button type="button" class="link-btn" id="showPromptFields">＋ 插入事件数据字段</button></div><div class="action-prompt-wrap"><textarea id="actionPromptInput" placeholder="'+esc(selected.promptExample||"请输入指令，例如：请分析设备 {{device_id}} 的状态。")+'">'+esc(prompt)+'</textarea></div><div class="action-map-hint">输入 {{ 可选择事件数据字段，也可手动填写字段名。</div></div>';
+          right.innerHTML=header+'<div class="action-config-body"><div class="action-prompt-head"><label for="actionPromptInput">指令 <span style="color:#d95757">*</span></label>'+(readonly?'':'<button type="button" class="link-btn" id="showPromptFields">＋ 插入事件数据字段</button>')+'</div><div class="action-prompt-wrap"><textarea id="actionPromptInput" '+(readonly?'readonly aria-readonly="true"':'')+' placeholder="'+esc(selected.promptExample||"请输入指令，例如：请分析设备 {{device_id}} 的状态。")+'">'+esc(prompt)+'</textarea></div>'+(readonly?'':'<div class="action-map-hint">输入 {{ 可选择事件数据字段，也可手动填写字段名。</div>')+'</div>';
           return;
         }
         right.innerHTML=header+'<div class="action-config-body">'+renderMappingTable(selected.params||[])+'</div>';
       }
+      if(readonly){renderActionConfig();return;}
       if(!editing){
         tabs.addEventListener("click",function(ev){const button=ev.target.closest("[data-action-tab]");if(!button||button.dataset.actionTab===type)return;type=button.dataset.actionTab;selected=null;selectedTool=null;selectedOperation=null;expandedToolId=null;mappings={};prompt="";search.value="";renderTabs();renderResources();renderActionConfig();});
         search.addEventListener("input",renderResources);
