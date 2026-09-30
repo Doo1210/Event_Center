@@ -1115,7 +1115,7 @@
           '<td><span style="font:11px var(--mono);color:#50627d">'+Number(e.count).toLocaleString()+'</span></td>'+
           '<td>'+processing+'</td>'+
           '<td><div class="switch-cell"><span class="switch-guard '+(disabledReason?"disabled":"")+'" '+(disabledReason?'data-tooltip="'+esc(disabledReason)+'"':"")+'><button class="switch '+(e.actionsOn&&state!=="pending"?"on":"")+'" data-toggle="actions" role="switch" aria-checked="'+!!(e.actionsOn&&state!=="pending")+'" '+(disabledReason?"disabled":"")+' aria-label="'+(e.actionsOn?"关闭":"开启")+'事件处理"></button></span></div></td>'+
-          '<td><div class="action-links"><button class="link-btn" data-op="config">配置处理</button><button class="link-btn" data-op="logs">记录</button><div class="more-wrap"><button class="more-btn" data-op="more" aria-label="更多操作">···</button><div class="menu"><button data-op="edit">编辑接入配置</button><button data-op="duplicate">复制事件</button><button class="danger" data-op="delete">删除事件</button></div></div></div></td>'+
+          '<td><div class="action-links"><button class="link-btn" data-op="config">配置处理</button><button class="link-btn" data-op="logs">事件记录</button><div class="more-wrap"><button class="more-btn" data-op="more" aria-label="更多操作">···</button><div class="menu"><button data-op="edit">编辑接入配置</button><button data-op="duplicate">复制事件</button><button class="danger" data-op="delete">删除事件</button></div></div></div></td>'+
         '</tr>';
       }).join("");
       body.querySelectorAll(".switch-guard.disabled[data-tooltip]").forEach(function(guard){
@@ -1418,9 +1418,9 @@
       const e=currentEvent(); if(!e)return;
       const configuring=activeTab==="config";
       document.getElementById("detailPage").classList.toggle("config-mode",configuring);
-      document.getElementById("detailPageTitle").textContent=configuring?"配置处理流程":"记录";
+      document.getElementById("detailPageTitle").textContent=configuring?"配置处理流程":"事件记录";
       document.getElementById("detailName").textContent=e.name;
-      document.getElementById("detailJumpText").textContent=configuring?"记录":"配置处理流程";
+      document.getElementById("detailJumpText").textContent=configuring?"事件记录":"配置处理流程";
       document.getElementById("configTab").classList.toggle("hidden",activeTab!=="config");
       document.getElementById("logsTab").classList.toggle("hidden",activeTab!=="logs");
       if(activeTab==="config")renderConfig();
@@ -2063,7 +2063,7 @@
       const body='<div class="run-overview"><div class="run-overview-main"><span class="run-overview-id">'+esc(log.id)+'</span><span class="run-overview-meta">版本 '+esc(log.version)+'　·　接收 '+esc(runTimeAt(log.time,0,true))+'　·　总耗时 '+esc(runDurationSeconds(duration))+'</span></div><span class="run-result-chip '+(log.kind==="success"?"":log.kind)+'">'+esc(log.result)+'</span></div>'+
         '<div class="run-detail-layout"><section class="run-panel"><div class="run-panel-head"><h4>事件数据</h4><p>接入时收到的事件内容</p></div><div class="run-panel-scroll run-data-scroll"><dl class="run-source-meta"><dt>来源</dt><dd>'+esc(event.type+' / '+event.info)+'</dd><dt>接收时间</dt><dd>'+esc(runTimeAt(log.time,0,true))+'</dd></dl><div class="run-section-label">接入数据</div><pre class="run-json run-data-json">'+esc(rawData)+'</pre></div></section>'+
         '<section class="run-panel"><div class="run-panel-head"><h4>执行详情</h4><p>按发生时间记录接入、条件判断和动作执行</p></div><div class="run-panel-scroll">'+points.join("")+'</div></section></div>';
-      openModal("事件运行详情",body,'<div class="right"><button class="btn btn-small" data-close>关闭</button></div>',true);
+      openModal("事件详情",body,'<div class="right"><button class="btn btn-small" data-close>关闭</button></div>',true);
       document.getElementById("modal").classList.add("run-detail-dialog");
     }
     function publishSelectedVersion(){
