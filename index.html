@@ -413,7 +413,11 @@
     .log-toolbar { margin-bottom: 10px; padding: 11px 13px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1px solid #e6ebf2; border-radius: 9px; background: #fff; }
     .log-toolbar > .btn { margin-left: auto; flex: none; }
     .log-filters { display: flex; flex-wrap: wrap; gap: 7px; }
-    .log-table td { height: 52px; }
+    .log-table th { font-size: 11px; }
+    .log-table td { height: 52px; font-size: 12px; }
+    .log-table .record-id { color: #4d6381; font: 11px var(--mono); }
+    .log-table .version-pill { font: 700 11px var(--mono); }
+    .log-table .result,.log-table .record-link { font-size: 11px; }
     .log-date { width: 139px; }
     .modal.stats-dialog { width: min(1020px,calc(100vw - 28px)); height: min(640px,calc(100dvh - 36px)); max-height: calc(100dvh - 36px); display: flex; flex-direction: column; overflow: hidden; }
     .modal.stats-dialog .modal-head,.modal.stats-dialog .modal-foot { flex: none; }
@@ -1349,7 +1353,7 @@
     }
     function logRow(l,i){
       const resultClass=l.kind==="success"?"":l.kind==="fail"?"fail":l.kind==="warn"?"warn":"muted";
-      return '<tr data-log-row="'+i+'"><td><code style="font:10px var(--mono);color:#4d6381">'+esc(l.id)+'</code></td><td>'+esc(l.time)+'</td><td><span class="version-pill">'+esc(l.version)+'</span></td><td>'+esc(l.branch)+'</td><td><span class="result '+resultClass+'">● '+esc(l.result)+'</span></td><td>'+esc(runDurationSeconds(runDurationMs(l.duration)))+'</td><td><button class="record-link" data-log-id="'+esc(l.id)+'">查看详情</button></td></tr>';
+      return '<tr data-log-row="'+i+'"><td><code class="record-id">'+esc(l.id)+'</code></td><td>'+esc(l.time)+'</td><td><span class="version-pill">'+esc(l.version)+'</span></td><td>'+esc(l.branch)+'</td><td><span class="result '+resultClass+'">● '+esc(l.result)+'</span></td><td>'+esc(runDurationSeconds(runDurationMs(l.duration)))+'</td><td><button class="record-link" data-log-id="'+esc(l.id)+'">查看详情</button></td></tr>';
     }
     function applyLogFilter(){
       const query=document.getElementById("logSearch").value.toLowerCase();
