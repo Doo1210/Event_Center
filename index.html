@@ -261,6 +261,13 @@
     .flow-intro { margin: 0 0 11px; color: #8495ad; font-size: 11px; }
     .flow-panel .branch-card { margin-bottom: 7px; }
     .flow-panel .panel-title { font-size: 14px; }
+    .flow-branch-count { padding: 4px 8px; color: #3970dc; border-radius: 99px; background: #edf3ff; font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .branch-chain { padding-left: 32px; display: grid; gap: 8px; }
+    .branch-chain-step { min-width: 0; position: relative; }
+    .branch-chain-step:not(:last-child):before { content: ""; width: 2px; position: absolute; top: 21px; bottom: -29px; left: -21px; background: #d9e5f7; }
+    .branch-chain-marker { width: 22px; height: 22px; position: absolute; top: 10px; left: -32px; z-index: 1; display: grid; place-items: center; color: #326fe3; border: 1px solid #bbcef2; border-radius: 50%; background: #fff; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .branch-chain-marker.is-fallback { color: #74859b; border-color: #d5dce7; background: #f8fafd; }
+    .branch-chain .branch-card { margin-bottom: 0; }
     .flow-panel .branch-head { min-height: 42px; padding: 0 13px; border-bottom: 0; }
     .flow-panel .branch-label { font-size: 12px; }
     .flow-panel .branch-hint { font-size: 11px; }
@@ -1208,8 +1215,10 @@
         const addAction=editable?'<div class="action-add-row"><button type="button" class="add-action-chip" data-add-action="'+i+'">＋ 添加执行动作</button></div>':"";
         const header=showBranchLogic?'<div class="branch-head"><div class="branch-label">'+branchBadge+esc(b.name)+(fallback?'<span class="branch-hint">未命中前面的分支</span>':"")+'</div>'+branchOps+'</div>':"";
         const cardClass=conditional?"has-condition":showBranchLogic?"is-default":"is-direct";
-        return '<article class="branch-card '+cardClass+'">'+header+conditionBlock+'<div class="actions-block"><div class="mini-label">执行动作 · 并行执行</div><div class="action-stack">'+(actions||(editable?"":'<span class="flow-note">—</span>'))+addAction+'</div></div></article>';
+        const card='<article class="branch-card '+cardClass+'">'+header+conditionBlock+'<div class="actions-block"><div class="mini-label">执行动作 · 并行执行</div><div class="action-stack">'+(actions||(editable?"":'<span class="flow-note">—</span>'))+addAction+'</div></div></article>';
+        return showBranchLogic?'<div class="branch-chain-step"><span class="branch-chain-marker '+(fallback?"is-fallback":"")+'" aria-label="第 '+(i+1)+' 个分支">'+(i+1)+'</span>'+card+'</div>':card;
       }).join(""):'<div class="empty" style="padding:30px"><strong>还没有处理流程</strong><span>'+(editable?'添加 IF 条件分支并配置执行动作；保存后会自动包含 ELSE 其他情况。':'此版本尚未配置处理流程。')+'</span></div>';
+      const flowBranchesHtml=showBranchLogic?'<div class="branch-chain">'+branchesHtml+'</div>':branchesHtml;
       const historical=(e.versions||[]).filter(function(v){return !hasPublished||v.version!==e.version;}).sort(function(a,b){return String(b.version).localeCompare(String(a.version),undefined,{numeric:true,sensitivity:"base"});});
       const draftEntry='<button class="version-entry version-pinned '+(selectedConfigView==="draft"?"active":"")+'" data-version-view="draft"><span>草稿</span></button>';
       const currentVersionEntry=hasPublished?'<button class="version-entry '+(selectedConfigView==="current"?"active":"")+'" data-version-view="current"><span>'+esc(e.version)+'</span><span class="version-state '+(e.status&&e.actionsOn?"":"paused")+'">'+(e.status&&e.actionsOn?"运行中":"暂停运行")+'</span></button>':"";
@@ -1231,7 +1240,7 @@
         '<div class="config-layout">'+
           '<aside class="version-rail"><div class="version-rail-title">版本</div>'+draftEntry+'<div class="version-separator"></div><div class="version-list">'+versionEntries+'</div></aside>'+
           '<div class="version-workspace"><section class="version-command"><div class="version-command-title"><div class="version-title-line"><strong>'+esc(viewName)+'</strong>'+(versionHint?'<span class="version-hint">'+esc(versionHint)+'</span>':'')+'</div><div class="version-description"><span>'+esc(versionDescription)+'</span><button type="button" id="editVersionDescription" aria-label="编辑版本描述" title="编辑版本描述"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button></div></div><div class="version-actions">'+versionActions+'</div></section>'+
-          '<section class="flow-panel"><div class="panel-head"><div class="panel-title">处理流程'+(editable?'':'<span class="readonly-badge">只读</span>')+'</div></div><div class="panel-body">'+(editable?'<div class="flow-toolbar"><button class="btn btn-small" id="addBranch">＋ 添加分支</button></div>':'')+'<p class="flow-intro">'+(showBranchLogic?'按顺序判断 IF / ELSE IF，未命中时执行 ELSE；命中分支的动作并行执行。':'事件接入后并行执行下列动作。')+'</p>'+branchesHtml+'</div></section></div>'+
+          '<section class="flow-panel"><div class="panel-head"><div class="panel-title">处理流程'+(showBranchLogic?'<span class="flow-branch-count">'+branches.length+' 个分支</span>':'')+(editable?'':'<span class="readonly-badge">只读</span>')+'</div></div><div class="panel-body">'+(editable?'<div class="flow-toolbar"><button class="btn btn-small" id="addBranch">＋ 添加分支</button></div>':'')+'<p class="flow-intro">'+(showBranchLogic?'按顺序判断 IF / ELSE IF，未命中时执行 ELSE；命中分支的动作并行执行。':'事件接入后并行执行下列动作。')+'</p>'+flowBranchesHtml+'</div></section></div>'+
         '</div>';
       document.querySelector("#configTab .version-list").scrollTop=versionScroll;
       document.querySelector("#configTab .flow-panel .panel-body").scrollTop=flowScroll;
