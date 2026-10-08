@@ -1936,10 +1936,11 @@
         let branchNote="没有可执行分支。";
         if(matched)branchNote=(matched.conditions||[]).length?"命中条件："+matched.conditions.join(matched.logic==="或"?" 或 ":" 且 "):"按配置命中该分支。";
         else if(branch)branchNote=branches.length===1?"此流程直接处理所有事件。":"未命中其他条件，进入默认分支。";
-        const points=[runPoint("步骤 1","接收事件数据","JSON 解析成功 · "+Object.keys(data).length+" 个字段","")];
-        points.push(runPoint("步骤 2",branch?"命中分支："+name:"条件未命中",branchNote,branch?"":"muted"));
-        if(branch)points.push(runPoint("步骤 3",actions.length?"模拟选择动作 · "+actions.length+" 个并行":"无执行动作",actions.length?"按命中分支列出动作，未调用真实服务。":"此分支没有配置动作，事件仅保留记录。",actions.length?"":"muted",actionCards?'<div class="run-action-list">'+actionCards+'</div>':""));
-        points.push(runPoint("步骤 "+(branch?4:3),"本次模拟结束","仅模拟条件匹配和动作选择，不调用真实动作。",""));
+        const testTime=runTimeAt(new Date().toISOString(),0,false);
+        const points=[runPoint(testTime,"接收事件数据","JSON 解析成功 · "+Object.keys(data).length+" 个字段","")];
+        points.push(runPoint(testTime,branch?"命中分支："+name:"条件未命中",branchNote,branch?"":"muted"));
+        if(branch)points.push(runPoint(testTime,actions.length?"模拟选择动作 · "+actions.length+" 个并行":"无执行动作",actions.length?"按命中分支列出动作，未调用真实服务。":"此分支没有配置动作，事件仅保留记录。",actions.length?"":"muted",actionCards?'<div class="run-action-list">'+actionCards+'</div>':""));
+        points.push(runPoint(testTime,"本次模拟结束","仅模拟条件匹配和动作选择，不调用真实动作。",""));
         document.getElementById("testResultStatus").innerHTML='<span class="status-chip"><i class="status-dot green"></i>模拟完成</span>';
         document.getElementById("testResult").innerHTML=points.join("");
         if(testedView==="draft")e.draft.tested=true;
