@@ -120,10 +120,12 @@
     tbody tr:last-child td { border-bottom: 0; }
     .event-name { color: #263b5a; font-size: 12px; font-weight: 700; }
     .subline { margin-top: 5px; color: #9aa6b7; font-size: 10px; }
-    .event-state { margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; color: #8090a5; font-size: 10px; }
+    .event-state { max-width: 100%; margin-top: 6px; display: inline-flex; align-items: center; gap: 6px; color: #8090a5; font-size: 10px; line-height: 1.35; }
+    .event-state-text { min-width: 0; overflow-wrap: anywhere; }
     .event-state-dot { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #b9c2ce; }
     .event-state.running .event-state-dot { background: #30a978; }
-    .event-state.paused .event-state-dot { background: #e2a13b; }
+    .event-state.pending .event-state-dot { background: #b9c2ce; }
+    .event-state.intake-paused .event-state-dot { background: #e2a13b; }
     .event-info { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
     .event-info-detail { max-width: 260px; overflow: hidden; color: #73839a; text-overflow: ellipsis; font-size: 10px; }
     .process-summary { display: flex; flex-direction: column; gap: 5px; color: #52647c; font-size: 10px; }
@@ -241,7 +243,6 @@
     .version-entry.active { color: #2864d9; border-color: #cbdcfb; background: #eef4ff; }
     .version-entry:focus-visible { outline: 2px solid #4a7dfa; outline-offset: 1px; }
     .version-state { padding: 3px 5px; flex: none; border-radius: 4px; background: #e9f7f0; color: #2c9a6b; font-size: 9px; font-weight: 700; }
-    .version-state.paused { background: #fff5e6; color: #ba852f; }
     .version-workspace { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
     .version-command { min-height: 58px; margin-bottom: 11px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #e4eaf3; border-radius: 10px; background: #fff; }
     .version-command-title { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
@@ -802,15 +803,15 @@
           <div class="filters">
             <input class="field" id="searchInput" type="search" placeholder="搜索事件名称">
             <select class="select" id="sourceFilter"><option value="">全部触发源</option><option>Timer</option><option>WebHook</option><option>Kafka</option><option>MQTT</option><option>Pulsar</option></select>
-            <select class="select" id="intakeFilter"><option value="">全部接入状态</option><option value="on">接入中</option><option value="off">已停止</option></select>
-            <select class="select" id="statusFilter"><option value="">全部处理状态</option><option value="running">运行中</option><option value="paused">暂停运行</option><option value="pending">待发布运行</option></select>
+            <select class="select" id="intakeFilter"><option value="">全部接入状态</option><option value="on">接入中</option><option value="off">暂停接入</option></select>
+            <select class="select" id="statusFilter"><option value="">全部处理状态</option><option value="running">运行中</option><option value="pending">待发布运行</option></select>
           </div>
           <button class="btn btn-primary" id="addEventBtn"><span style="font-size:16px;line-height:10px">＋</span>新增事件</button>
         </section>
         <section class="table-card">
           <div class="table-scroll"><table class="event-list-table">
             <colgroup><col><col><col><col><col><col><col></colgroup>
-            <thead><tr><th>事件名称</th><th>事件信息</th><th>接入开关<span class="table-help" data-tooltip="关闭后将不再接收新的事件，也不会进入后续事件处理流程。" tabindex="0" aria-label="关闭后将不再接收新的事件，也不会进入后续事件处理流程。">?</span></th><th>触发次数</th><th>事件处理</th><th>处理开关<span class="table-help" data-tooltip="关闭后仍可接收事件，但不会执行事件处理流程。" tabindex="0" aria-label="关闭后仍可接收事件，但不会执行事件处理流程。">?</span></th><th>操作</th></tr></thead>
+            <thead><tr><th>事件名称</th><th>事件信息</th><th>接入开关<span class="table-help" data-tooltip="关闭后暂停接入新事件；处理开关和已发布版本保持不变。" tabindex="0" aria-label="关闭后暂停接入新事件；处理开关和已发布版本保持不变。">?</span></th><th>触发次数</th><th>事件处理</th><th>处理开关<span class="table-help" data-tooltip="关闭将取消当前版本的发布运行；开启时需要选择要发布的版本。接入开关独立控制。" tabindex="0" aria-label="关闭将取消当前版本的发布运行；开启时需要选择要发布的版本。接入开关独立控制。">?</span></th><th>操作</th></tr></thead>
             <tbody id="eventRows"></tbody>
           </table></div>
           <div class="pagination"><span id="totalText">共 0 条事件</span><div class="page-controls" id="eventPageControls"></div></div>
@@ -887,7 +888,7 @@
       {id:6,name:"订单状态更新 WebHook",type:"WebHook",info:"POST /webhook/orders/update",status:true,actionsOn:true,count:234,config:"ready",version:"v2.0.0",branches:[{name:"大额订单",conditions:["amount ≥ 10000"],logic:"",actions:[{type:"workflow",name:"大额订单核验",detail:"订单复核"},{type:"tool",name:"发送订单通知",detail:"外部接口"}]},{name:"其他情况",conditions:["未命中其他条件"],logic:"",actions:[{type:"workflow",name:"同步订单状态",detail:"状态同步"}]}],logs:[]},
       {id:7,name:"设备传感器数据流",type:"Kafka",info:"iot.sensor.data · 2 brokers",status:true,actionsOn:true,count:1523,config:"ready",version:"v1.4.0",branches:[{name:"温度预警",conditions:["temperature > 80"],logic:"",actions:[{type:"expert",name:"设备诊断专家",detail:"故障研判"},{type:"tool",name:"设备告警接口",detail:"创建告警"}]}],logs:[]},
       {id:8,name:"产线设备温湿度上报",type:"MQTT",info:"factory/line1/+/telemetry",status:true,actionsOn:false,count:892,config:"ready",version:"v1.0.0",branches:[{name:"其他情况",conditions:["所有事件"],logic:"",actions:[{type:"workflow",name:"环境数据归档",detail:"数据入库"}]}],logs:[]},
-      {id:9,name:"周末设备保养提醒",type:"Timer",info:"每周六 09:00",status:false,actionsOn:false,count:41,config:"ready",version:"v1.0.0",branches:[{name:"其他情况",conditions:["所有事件"],logic:"",actions:[{type:"workflow",name:"生成巡检工单",detail:"安排保养"}]}],logs:[]},
+      {id:9,name:"周末设备保养提醒",type:"Timer",info:"每周六 09:00",status:false,actionsOn:true,count:41,config:"ready",version:"v1.0.0",branches:[{name:"其他情况",conditions:["所有事件"],logic:"",actions:[{type:"workflow",name:"生成巡检工单",detail:"安排保养"}]}],logs:[]},
       {id:10,name:"锅炉压力异常订阅",type:"Pulsar",info:"persistent://factory/boiler/pressure",status:true,actionsOn:false,count:730,config:"ready",version:"v1.2.0",branches:[{name:"压力过高",conditions:["pressure > 1.6"],logic:"",actions:[{type:"expert",name:"设备诊断专家",detail:"分析压力异常"}]},{name:"其他情况",conditions:["所有事件"],logic:"",actions:[{type:"tool",name:"发送告警通知",detail:"通知值班人员"}]}],logs:[]},
       {id:11,name:"供应商回调接入待配置",type:"WebHook",info:"POST /webhook/supplier/callback",status:true,actionsOn:false,count:0,config:"empty",version:"-",branches:[],logs:[]},
       {id:12,name:"质检结果回传",type:"WebHook",info:"POST /webhook/quality/result",status:false,actionsOn:false,count:151,config:"ready",version:"v2.1.0",branches:[{name:"其他情况",conditions:["所有事件"],logic:"",actions:[{type:"tool",name:"发送告警通知",detail:"通知质检负责人"}]}],logs:[]},
@@ -1054,6 +1055,15 @@
         e.sampleAgentActionsAdded=true;
       }
     });
+    let migratedProcessingState=false;
+    events.forEach(function(e){
+      const validRunningVersion=e.config==="ready"&&e.version&&e.version!=="-"&&e.actionsOn;
+      if(!validRunningVersion&&(e.version!=="-"||e.actionsOn||e.config==="ready")){
+        e.version="-";e.config="draft";e.actionsOn=false;e.publishedBranches=[];
+        migratedProcessingState=true;
+      }
+    });
+    if(migratedProcessingState)localStorage.setItem("event-center-prototype-v1",JSON.stringify(events));
     let currentEventId = null;
     let activeTab = "config";
     let selectedConfigView = "current";
@@ -1088,10 +1098,7 @@
       return conditions.concat([fallback]);
     }
     function sourceClass(type){ return String(type).toLowerCase().replace("webhook","webhook"); }
-    function eventRunState(e){
-      if(e.config!=="ready"||!e.version||e.version==="-")return "pending";
-      return e.status&&e.actionsOn?"running":"paused";
-    }
+    function eventRunState(e){return hasPublishedConfig(e)&&e.actionsOn?"running":"pending";}
     function renderSummary(){
       const active = events.filter(function(e){return e.status;}).length;
       const running = events.filter(function(e){return eventRunState(e)==="running";}).length;
@@ -1122,18 +1129,21 @@
       if(!rows.length){ body.innerHTML = '<tr><td colspan="7"><div class="empty">⌕<strong>没有找到匹配的事件</strong><span>调整搜索词或筛选条件后再试</span></div></td></tr>'; return; }
       body.innerHTML = rows.map(function(e){
         const state=eventRunState(e);
-        const stateText=state==="running"?"运行中 · "+e.version:state==="paused"?"暂停运行 · "+e.version:"待发布运行";
+        const stateText=!e.status?"暂停接入 · "+(state==="running"?"处理已开启（"+e.version+"）":"待发布运行"):state==="running"?"运行中 · "+e.version:"待发布运行";
+        const stateClass=e.status?state:"intake-paused";
+        const stateHint=!e.status&&state==="running"?"暂停接入新事件；恢复接入后将自动使用 "+e.version+" 处理":"";
         const branches=e.publishedBranches||[];
         const actionCount=branches.reduce(function(sum,branch){return sum+(branch.actions||[]).length;},0);
         const processing=state==="pending"?'<span class="process-empty">—</span>':'<div class="process-summary"><span>'+branches.length+' 个流程分支</span><span>'+actionCount+' 个执行动作</span></div>';
-        const disabledReason=state==="pending"?"请先配置事件处理流程":!e.status?"请先开启事件接入":"";
+        const publishableVersions=(e.versions||[]).filter(function(v){return (v.branches||[]).some(function(b){return (b.actions||[]).length>0;});});
+        const disabledReason=state==="pending"&&!publishableVersions.length?"请先在配置处理页创建并发布版本":"";
         return '<tr data-id="'+e.id+'">'+
-          '<td><div class="event-name">'+esc(e.name)+'</div><div class="event-state '+state+'"><i class="event-state-dot"></i>'+esc(stateText)+'</div></td>'+
+          '<td><div class="event-name">'+esc(e.name)+'</div><div class="event-state '+stateClass+'" '+(stateHint?'title="'+esc(stateHint)+'"':"")+'><i class="event-state-dot"></i><span class="event-state-text">'+esc(stateText)+'</span></div></td>'+
           '<td><div class="event-info"><span class="source-badge '+sourceClass(e.type)+'">'+esc(e.type)+'</span><span class="event-info-detail" title="'+esc(e.info)+'">'+esc(e.info)+'</span></div></td>'+
           '<td><div class="switch-cell"><button class="switch '+(e.status?"on":"")+'" data-toggle="intake" role="switch" aria-checked="'+!!e.status+'" aria-label="'+(e.status?"关闭":"开启")+'事件接入"></button></div></td>'+
           '<td><span style="font:11px var(--mono);color:#50627d">'+Number(e.count).toLocaleString()+'</span></td>'+
           '<td>'+processing+'</td>'+
-          '<td><div class="switch-cell"><span class="switch-guard '+(disabledReason?"disabled":"")+'" '+(disabledReason?'data-tooltip="'+esc(disabledReason)+'"':"")+'><button class="switch '+(e.actionsOn&&state!=="pending"?"on":"")+'" data-toggle="actions" role="switch" aria-checked="'+!!(e.actionsOn&&state!=="pending")+'" '+(disabledReason?"disabled":"")+' aria-label="'+(e.actionsOn?"关闭":"开启")+'事件处理"></button></span></div></td>'+
+          '<td><div class="switch-cell"><span class="switch-guard '+(disabledReason?"disabled":"")+'" '+(disabledReason?'data-tooltip="'+esc(disabledReason)+'"':"")+'><button class="switch '+(state==="running"?"on":"")+'" data-toggle="actions" role="switch" aria-checked="'+(state==="running")+'" '+(disabledReason?"disabled":"")+' aria-label="'+(state==="running"?"取消发布运行":"选择版本并发布运行")+'"></button></span></div></td>'+
           '<td><div class="action-links"><button class="link-btn" data-op="config">配置处理</button><button class="link-btn" data-op="logs">事件记录</button><div class="more-wrap"><button class="more-btn" data-op="more" aria-label="更多操作">···</button><div class="menu"><button data-op="edit">编辑接入配置</button><button data-op="duplicate">复制事件</button><button class="danger" data-op="delete">删除事件</button></div></div></div></td>'+
         '</tr>';
       }).join("");
@@ -1233,19 +1243,18 @@
       const flowBranchesHtml=showBranchLogic?'<div class="branch-chain">'+branchesHtml+'</div>':branchesHtml;
       const historical=(e.versions||[]).filter(function(v){return !hasPublished||v.version!==e.version;}).sort(function(a,b){return String(b.version).localeCompare(String(a.version),undefined,{numeric:true,sensitivity:"base"});});
       const draftEntry='<button class="version-entry version-pinned '+(selectedConfigView==="draft"?"active":"")+'" data-version-view="draft"><span>草稿</span></button>';
-      const currentVersionEntry=hasPublished?'<button class="version-entry '+(selectedConfigView==="current"?"active":"")+'" data-version-view="current"><span>'+esc(e.version)+'</span><span class="version-state '+(e.status&&e.actionsOn?"":"paused")+'">'+(e.status&&e.actionsOn?"运行中":"暂停运行")+'</span></button>':"";
+      const currentVersionEntry=hasPublished?'<button class="version-entry '+(selectedConfigView==="current"?"active":"")+'" data-version-view="current"><span>'+esc(e.version)+'</span><span class="version-state">运行中</span></button>':"";
       const historicalVersionEntries=historical.map(function(v){const view="history:"+v.version;return '<button class="version-entry '+(selectedConfigView===view?"active":"")+'" data-version-view="'+esc(view)+'"><span>'+esc(v.version)+'</span></button>';}).join("");
       const versionEntries=currentVersionEntry+historicalVersionEntries;
       const viewName=selectedConfigView==="draft"?"草稿":selectedConfigView==="current"?e.version:selectedConfigView.slice(8);
       const versionHint="";
       const selectedSnapshot=selectedConfigView==="draft"?e.draft:(e.versions||[]).find(function(v){return v.version===(selectedConfigView==="current"?e.version:selectedConfigView.slice(8));});
       const versionDescription=selectedSnapshot&&selectedSnapshot.description?selectedSnapshot.description:"暂无版本描述";
-      const currentRunning=e.status&&e.actionsOn;
       const incompleteBranch=e.draft.branches.some(function(branch){return !isDefaultBranch(branch)&&!(branch.actions||[]).length;});
       const hasDraftActions=e.draft.branches.some(function(branch){return (branch.actions||[]).length>0;});
       const draftPublishHint=incompleteBranch?"请先为每个条件分支配置执行动作":"请先添加至少一个执行动作";
       const versionActions='<button class="btn btn-small" id="testBtn">测试</button>'+
-        (selectedConfigView==="current"?'<button class="btn btn-small" id="runSwitchBtn">'+(currentRunning?"暂停运行":"恢复运行")+'</button><button class="btn btn-copy-draft btn-small" id="overwriteDraftBtn">复制为草稿</button>'+(currentRunning?'<span class="version-delete-guard" data-tooltip="请先暂停运行，再删除当前版本" tabindex="0"><button class="btn btn-danger btn-small" disabled>删除版本</button></span>':'<button class="btn btn-danger btn-small" id="deleteVersionBtn">删除版本</button>'):
+        (selectedConfigView==="current"?'<button class="btn btn-small" id="runSwitchBtn">取消发布运行</button><button class="btn btn-copy-draft btn-small" id="overwriteDraftBtn">复制为草稿</button><span class="version-delete-guard" data-tooltip="请先取消发布运行，再删除此版本" tabindex="0"><button class="btn btn-danger btn-small" disabled>删除版本</button></span>':
         selectedConfigView==="draft"?'<button class="btn btn-primary btn-small" id="publishBtn" '+(hasDraftActions&&!incompleteBranch?"":"disabled title=\""+esc(draftPublishHint)+"\"")+'>发布运行</button>':
         '<button class="btn btn-small" id="publishBtn">发布运行</button><button class="btn btn-copy-draft btn-small" id="overwriteDraftBtn">复制为草稿</button><button class="btn btn-danger btn-small" id="deleteVersionBtn">删除版本</button>');
       document.getElementById("configTab").innerHTML=
@@ -1261,7 +1270,7 @@
       const overwriteButton=document.getElementById("overwriteDraftBtn");
       if(overwriteButton)overwriteButton.addEventListener("click",overwriteDraftFromSelected);
       const switchButton=document.getElementById("runSwitchBtn");
-      if(switchButton)switchButton.addEventListener("click",toggleCurrentRun);
+      if(switchButton)switchButton.addEventListener("click",function(){confirmCancelPublishedRun(e,true);});
       const editDescriptionButton=document.getElementById("editVersionDescription");
       if(editDescriptionButton)editDescriptionButton.addEventListener("click",editSelectedVersionDescription);
       const deleteVersionButton=document.getElementById("deleteVersionBtn");
@@ -1294,7 +1303,7 @@
       const rows=logsForCurrentEvent(),e=currentEvent();
       const versionOptions=[...new Set(rows.map(function(r){return r.version;}).filter(function(v){return v&&v!=="—"&&v!=="-";}))];
       document.getElementById("logsTab").innerHTML=
-        '<div class="log-toolbar"><div class="log-filters"><input class="field" id="logSearch" placeholder="搜索事件 ID" style="width:170px"><input class="field log-date" id="logFrom" type="date" aria-label="开始日期"><span class="filter-note" style="align-self:center">至</span><input class="field log-date" id="logTo" type="date" aria-label="结束日期"><select class="select" id="logVersion"><option value="">全部版本</option>'+versionOptions.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+(v===e.version?" · "+(e.status&&e.actionsOn?"运行中":"暂停运行"):"")+'</option>';}).join("")+'</select><select class="select" id="logStatus"><option value="">全部运行结果</option><option value="success">执行成功</option><option value="failure">执行失败</option><option value="not_executed">未执行</option><option value="unconfigured">未配置执行动作</option></select></div><button class="btn btn-primary btn-small" id="actionStatsBtn">执行动作统计</button></div>'+
+        '<div class="log-toolbar"><div class="log-filters"><input class="field" id="logSearch" placeholder="搜索事件 ID" style="width:170px"><input class="field log-date" id="logFrom" type="date" aria-label="开始日期"><span class="filter-note" style="align-self:center">至</span><input class="field log-date" id="logTo" type="date" aria-label="结束日期"><select class="select" id="logVersion"><option value="">全部版本</option>'+versionOptions.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+(hasPublishedConfig(e)&&v===e.version?" · 运行中":"")+'</option>';}).join("")+'</select><select class="select" id="logStatus"><option value="">全部运行结果</option><option value="success">执行成功</option><option value="failure">执行失败</option><option value="not_executed">未执行</option><option value="unconfigured">未配置执行动作</option></select></div><button class="btn btn-primary btn-small" id="actionStatsBtn">执行动作统计</button></div>'+
         '<section class="table-card"><div class="table-scroll"><table class="log-table"><thead><tr><th>事件 ID</th><th>接收时间</th><th>处理流程版本</th><th>命中分支</th><th>运行结果</th><th>耗时</th><th>操作</th></tr></thead><tbody id="logRows">'+(rows.length?rows.map(logRow).join(""):'<tr><td colspan="7"><div class="empty">暂无事件记录</div></td></tr>')+'</tbody></table></div><div class="pagination"><span id="logTotal">展示最近 '+rows.length+' 条记录</span></div></section>';
       document.getElementById("logSearch").addEventListener("input",applyLogFilter);
       document.getElementById("logStatus").addEventListener("change",applyLogFilter);
@@ -1335,8 +1344,9 @@
         return base;
       }).filter(Boolean);
     }
-    function logsForCurrentEvent(){
-      const e=currentEvent();
+    function logsForCurrentEvent(eventOverride){
+      const e=eventOverride||currentEvent();
+      if(e.frozenLogs)return e.frozenLogs;
       if(e.demo)return Number(e.count)>0?coverageLogsForEvent(e):[];
       const oldVersion=(e.versions||[]).find(function(v){return v.version!==e.version;});
       const count=Math.max(0,Number(e.count)||0);
@@ -1421,8 +1431,8 @@
     }
     function showActionStatsModal(){
       const e=currentEvent(),totals=actionStatsVersionTotals(e);
-      const options='<option value="all">全部版本</option>'+totals.map(function(v){return '<option value="'+esc(v.version)+'">'+esc(v.version)+(v.version===e.version?" · "+(e.status&&e.actionsOn?"运行中":"暂停运行"):"")+'</option>';}).join("");
-      const note="触发次数按事件计数；待发布、暂停和未配置执行动作的记录不计入动作次数。一个事件可触发多个动作，各动作次数不相加；模拟测试不计入。";
+      const options='<option value="all">全部版本</option>'+totals.map(function(v){return '<option value="'+esc(v.version)+'">'+esc(v.version)+(hasPublishedConfig(e)&&v.version===e.version?" · 运行中":"")+'</option>';}).join("");
+      const note="触发次数按事件计数；待发布、历史未执行和未配置执行动作的记录不计入动作次数。一个事件可触发多个动作，各动作次数不相加；模拟测试不计入。";
       const body='<div class="action-stats-head"><div class="form-field action-stats-version"><label for="actionStatsVersion">切换版本</label><select class="select" id="actionStatsVersion">'+options+'</select></div><div class="action-stats-total"><span>触发次数</span><strong id="actionStatsTotal">0</strong></div></div><div class="table-scroll"><table class="action-stats-table"><thead><tr><th>版本</th><th>命中分支</th><th>动作类型</th><th>动作名称</th><th>成功次数</th><th>异常次数</th></tr></thead><tbody id="actionStatsRows"></tbody></table></div><div class="info-line">'+note+'</div>';
       openModal("执行动作统计",body,'<span></span><div class="right"><button class="btn btn-small" data-close>关闭</button></div>',false);
       document.getElementById("modal").classList.add("stats-dialog");
@@ -1849,15 +1859,29 @@
         document.getElementById("confirmOverwriteDraft").addEventListener("click",apply);
       }else apply();
     }
-    function toggleCurrentRun(){
-      const e=currentEvent();
-      if(e.status&&e.actionsOn){e.actionsOn=false;persist();renderConfig();renderList();showToast("处理已关闭，当前版本暂停运行；事件仍继续接入");return;}
-      if(!e.status){showToast("请先在事件列表开启接入开关，再恢复运行");return;}
-      e.actionsOn=true;persist();renderConfig();renderList();showToast("处理已开启，当前版本恢复运行");
+    function cancelPublishedRun(e){
+      if(!hasPublishedConfig(e))return;
+      e.frozenLogs=logsForCurrentEvent(e);
+      if(!(e.versions||[]).some(function(v){return v.version===e.version;})){
+        e.versions=e.versions||[];
+        e.versions.unshift({version:e.version,description:"原运行版本",time:new Date().toLocaleString("zh-CN"),branches:JSON.parse(JSON.stringify(e.publishedBranches||[]))});
+      }
+      e.version="-";e.config="draft";e.actionsOn=false;e.publishedBranches=[];
+      e.branches=JSON.parse(JSON.stringify(e.draft.branches));
+    }
+    function confirmCancelPublishedRun(e,fromConfig){
+      if(!hasPublishedConfig(e))return;
+      const version=e.version;
+      openConfirmModal("取消发布运行",'<div class="info-line">取消 '+esc(version)+' 的发布运行后，事件将变为待发布运行。版本会保留在历史版本中，接入开关不会改变。</div>','<span></span><div class="right"><button class="btn btn-small" data-close>返回</button><button class="btn btn-danger btn-small" id="confirmCancelPublishedRun">确认取消</button></div>');
+      document.getElementById("confirmCancelPublishedRun").addEventListener("click",function(){
+        cancelPublishedRun(e);persist();closeModal();
+        if(fromConfig){selectedConfigView="draft";renderDetail();}
+        renderList();showToast("已取消发布运行："+version+"；接入状态保持不变");
+      });
     }
     function deleteSelectedVersion(){
       const e=currentEvent(),deletingCurrent=selectedConfigView==="current";
-      if(deletingCurrent&&e.status&&e.actionsOn){showToast("请先暂停运行，再删除当前版本");return;}
+      if(deletingCurrent){showToast("请先取消发布运行，再删除此版本");return;}
       const version=deletingCurrent?e.version:selectedConfigView.slice(8);
       if(!(e.versions||[]).some(function(v){return v.version===version;})){showToast("所选版本不存在");return;}
       const detail=deletingCurrent?"删除后该事件将没有运行版本，处理保持关闭；历史版本与草稿保留。":"删除后无法再查看该版本的处理配置；当前运行版本与草稿不受影响。";
@@ -2071,7 +2095,7 @@
       points.push(runPoint(runTimeAt(log.time,0,false),"接收事件数据","来自 "+event.type+" · "+event.info,""));
       if(log.result==="未执行"){
         const waitingForPublish=log.reason==="pending";
-        points.push(runPoint(runTimeAt(log.time,Math.min(9,duration),false),waitingForPublish?"待发布运行":"处理暂停",waitingForPublish?"处理流程尚未发布，本次事件未执行动作。":"当前版本已暂停运行，本次事件未执行动作。",waitingForPublish?"muted":"warn"));
+        points.push(runPoint(runTimeAt(log.time,Math.min(9,duration),false),waitingForPublish?"待发布运行":"历史未执行记录",waitingForPublish?"当时没有生效的处理版本，本次事件未执行动作。":"该历史记录发生时处理未开启，本次事件未执行动作。",waitingForPublish?"muted":"warn"));
       }else{
         const branchNote=branch&&isDefaultBranch(branch)?"前述条件未命中，进入兜底分支。":branch&&branch.conditions&&branch.conditions.length?"命中条件："+branch.conditions.join(branch.logic==="或"?" 或 ":" 且 "):"按当前版本配置完成分支判断。";
         points.push(runPoint(runTimeAt(log.time,Math.min(18,duration),false),"命中分支："+log.branch,branchNote,""));
@@ -2088,17 +2112,57 @@
       openModal("事件详情",body,'<div class="right"><button class="btn btn-small" data-close>关闭</button></div>',true);
       document.getElementById("modal").classList.add("run-detail-dialog");
     }
+    function isPublishableVersion(snapshot){
+      const branches=snapshot&&snapshot.branches||[];
+      return branches.some(function(branch){return (branch.actions||[]).length>0;})&&
+        !branches.some(function(branch){return !isDefaultBranch(branch)&&!(branch.actions||[]).length;});
+    }
+    function activateVersion(e,sourceSnapshot,version,description,publishingDraft){
+      if(!e.versions)e.versions=[];
+      if(hasPublishedConfig(e)&&!e.versions.some(function(v){return v.version===e.version;})){
+        e.versions.unshift({version:e.version,description:"发布前当前版本",time:new Date().toLocaleString("zh-CN"),branches:JSON.parse(JSON.stringify(e.publishedBranches||[]))});
+      }
+      e.publishedBranches=normalizeFlowBranches(sourceSnapshot.branches);
+      e.version=version;e.config="ready";e.actionsOn=true;
+      if(publishingDraft)e.draft={branches:normalizeFlowBranches([]),description:"",tested:false,dirty:false};
+      e.branches=JSON.parse(JSON.stringify(e.draft.branches));
+      const snapshot={version:version,description:description,time:new Date().toLocaleString("zh-CN"),branches:JSON.parse(JSON.stringify(e.publishedBranches)),tested:!!sourceSnapshot.tested};
+      e.versions=e.versions.filter(function(v){return v.version!==version;});
+      e.versions.unshift(publishingDraft?snapshot:Object.assign({},sourceSnapshot,snapshot));
+    }
+    function versionChoiceDescription(snapshot){
+      const description=String(snapshot.description||"").trim();
+      return /^(当前生效配置|历史配置|演示历史配置|原运行版本|发布前当前版本|历史版本)$/.test(description)?"":description;
+    }
+    function showVersionChoiceModal(e){
+      const available=(e.versions||[]).filter(isPublishableVersion).sort(function(a,b){return String(b.version).localeCompare(String(a.version),undefined,{numeric:true,sensitivity:"base"});});
+      if(!available.length){showToast("请先在配置处理页创建并发布版本");return;}
+      const options=available.map(function(v){const description=versionChoiceDescription(v);return '<option value="'+esc(v.version)+'">'+esc(v.version)+(description?" · "+esc(description):"")+'</option>';}).join("");
+      const body='<div class="publish-version-form"><div class="form-field"><label for="selectedPublishVersion">选择处理流程版本</label><select class="select" id="selectedPublishVersion" style="width:100%">'+options+'</select></div><div class="info-line">确认后该版本开始处理新接入的事件；接入开关保持当前状态。</div></div>';
+      openModal("选择版本并发布运行",body,'<span></span><div class="right"><button class="btn btn-small" data-close>取消</button><button class="btn btn-primary btn-small" id="confirmVersionChoice">确认发布</button></div>',false);
+      document.getElementById("modal").classList.add("publish-dialog");
+      document.getElementById("confirmVersionChoice").addEventListener("click",function(){
+        const version=document.getElementById("selectedPublishVersion").value;
+        const snapshot=available.find(function(v){return v.version===version;});
+        if(!snapshot||!isPublishableVersion(snapshot)){showToast("所选版本已不可用");return;}
+        const apply=function(){activateVersion(e,snapshot,version,versionChoiceDescription(snapshot),false);persist();closeModal();renderList();showToast("已发布运行："+version);};
+        if(!snapshot.tested){
+          closeModal();
+          openConfirmModal("发布前建议测试",'<div class="info-line">该版本尚未测试。建议先测试处理流程，也可以继续发布运行。</div>','<span></span><div class="right"><button class="btn btn-small" data-close>取消</button><button class="btn btn-small" id="testChosenVersion">先去测试</button><button class="btn btn-primary btn-small" id="publishChosenVersion">继续发布</button></div>');
+          document.getElementById("testChosenVersion").addEventListener("click",function(){closeModal();openEvent(e.id,"config");selectedConfigView="history:"+version;renderConfig();showTestModal();});
+          document.getElementById("publishChosenVersion").addEventListener("click",apply);
+        }else apply();
+      });
+    }
     function publishSelectedVersion(){
       const e=currentEvent();
       const publishingDraft=selectedConfigView==="draft";
       const sourceVersion=publishingDraft?"草稿":selectedConfigView.slice(8);
       const sourceSnapshot=publishingDraft?e.draft:(e.versions||[]).find(function(v){return v.version===sourceVersion;});
       if(!sourceSnapshot){showToast("所选版本不存在");return;}
-      if(!sourceSnapshot.branches.some(function(branch){return (branch.actions||[]).length>0;})){showToast("请先添加至少一个执行动作");return;}
-      if(publishingDraft&&sourceSnapshot.branches.some(function(branch){return !isDefaultBranch(branch)&&!(branch.actions||[]).length;})){showToast("请为每个条件分支配置执行动作");return;}
-      if(!e.status){showToast("请先在事件列表开启接入开关，再发布运行");return;}
+      if(!isPublishableVersion(sourceSnapshot)){showToast("请先添加执行动作，并为每个条件分支配置执行动作");return;}
       const openPublishDialog=function(){
-      const publishNote=publishingDraft?'发布后将替换当前运行版本，并生成一份空白草稿，需要重新配置处理流程。':'将使用原版本号重新发布 '+sourceVersion+'，替换当前运行版本 '+(hasPublishedConfig(e)?e.version:"（暂无）")+'；当前运行版本会保留为历史版本。';
+      const publishNote=publishingDraft?'发布后将'+(hasPublishedConfig(e)?'替换当前运行版本，并':'')+'生成一份空白草稿；接入开关保持当前状态。':'将使用原版本号重新发布 '+sourceVersion+(hasPublishedConfig(e)?'，替换当前运行版本 '+e.version:'')+'；接入开关保持当前状态。';
       const versionField=publishingDraft
         ? '<div class="form-field"><label for="publishVersion">版本号</label><input id="publishVersion" placeholder="例如：v1.0.0" autocomplete="off"><div class="publish-version-hint">格式：v主版本号.次版本号.修订号，例如 v1.2.3；同一事件内不可重复</div></div>'
         : '<div class="form-field"><label>版本号</label><input value="'+esc(sourceVersion)+'" readonly></div>';
@@ -2110,22 +2174,8 @@
         if(publishingDraft&&!/^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(version)){showToast("版本号格式应为 v主版本号.次版本号.修订号，例如 v1.2.3");return;}
         if(publishingDraft&&(e.version===version||e.versions.some(function(v){return v.version===version;}))){showToast("该版本号已存在，请输入其他版本号");return;}
         const description=document.getElementById("publishDesc").value.trim();
-        if(!e.versions)e.versions=[];
-        if(hasPublishedConfig(e)&&!e.versions.some(function(v){return v.version===e.version;})){
-          e.versions.unshift({version:e.version,description:"发布前当前版本",time:new Date().toLocaleString("zh-CN"),branches:JSON.parse(JSON.stringify(e.publishedBranches||[]))});
-        }
-        e.publishedBranches=normalizeFlowBranches(sourceSnapshot.branches);
-        e.version=version;e.config="ready";e.actionsOn=true;
-        if(publishingDraft)e.draft={branches:normalizeFlowBranches([]),description:"",tested:false,dirty:false};
-        e.branches=JSON.parse(JSON.stringify(e.draft.branches));
+        activateVersion(e,sourceSnapshot,version,description,publishingDraft);
         selectedConfigView="current";
-        if(publishingDraft){
-          e.versions.unshift({version:version,description:description,time:new Date().toLocaleString("zh-CN"),branches:JSON.parse(JSON.stringify(e.publishedBranches)),tested:!!sourceSnapshot.tested});
-        }else{
-          const republished=Object.assign({},sourceSnapshot,{version:version,description:description,time:new Date().toLocaleString("zh-CN"),branches:JSON.parse(JSON.stringify(e.publishedBranches))});
-          e.versions=e.versions.filter(function(v){return v.version!==version;});
-          e.versions.unshift(republished);
-        }
         persist();closeModal();renderDetail();renderList();showToast(publishingDraft?"已发布新版本："+version:"已重新发布历史版本："+version);
       });
       };
@@ -2151,7 +2201,7 @@
       else if(op==="edit"){showEventModal(event.id);}
       else if(op==="detail-edit"){showEventModal(event.id);}
       else if(op==="duplicate"){
-        const copy=JSON.parse(JSON.stringify(event));copy.id=Date.now();copy.name=event.name+"（副本）";copy.status=false;copy.actionsOn=false;copy.count=0;copy.publishedBranches=JSON.parse(JSON.stringify(event.publishedBranches||[]));copy.draft={branches:normalizeFlowBranches(event.draft?event.draft.branches:copy.publishedBranches),tested:false,dirty:false};copy.branches=JSON.parse(JSON.stringify(copy.draft.branches));copy.config=hasPublishedConfig(event)?"ready":"draft";copy.versions=JSON.parse(JSON.stringify(event.versions||[]));copy.version=event.version||"-";events.unshift(copy);persist();renderList();showToast("事件副本已创建，默认停止接入");
+        const copy=JSON.parse(JSON.stringify(event));copy.id=Date.now();copy.name=event.name+"（副本）";copy.status=false;copy.actionsOn=false;copy.count=0;copy.frozenLogs=null;copy.publishedBranches=[];copy.draft={branches:normalizeFlowBranches(event.draft?event.draft.branches:event.publishedBranches),tested:false,dirty:false};copy.branches=JSON.parse(JSON.stringify(copy.draft.branches));copy.config="draft";copy.versions=JSON.parse(JSON.stringify(event.versions||[]));copy.version="-";events.unshift(copy);persist();renderList();showToast("事件副本已创建，默认暂停接入并待发布运行");
       }else if(op==="delete"){
         openConfirmModal("删除事件",'<div class="info-line">确定删除“'+esc(event.name)+'”吗？删除后将无法继续接收该事件，历史运行记录仍保留。</div>','<span></span><div class="right"><button class="btn btn-small" data-close>取消</button><button class="btn btn-danger btn-small" id="confirmDelete">删除事件</button></div>');
         document.getElementById("confirmDelete").addEventListener("click",function(){events=events.filter(function(x){return x.id!==event.id;});persist();closeModal();renderList();showToast("事件已删除");});
@@ -2163,17 +2213,14 @@
       const toggle=ev.target.closest("[data-toggle]");
       if(toggle){
         if(toggle.dataset.toggle==="intake"){
-          if(event.status){
-            event.status=false;event.actionsOn=false;
-            showToast(eventRunState(event)==="pending"?"接入已关闭，待发布事件不再接收新消息":"接入已关闭，处理已同步关闭；事件暂停运行");
-          } else {
-            event.status=true;
-            showToast(eventRunState(event)==="pending"?"接入已开启；处理流程待发布，处理开关暂不可用":"接入已开启；处理保持关闭，事件仍为暂停运行");
-          }
+          event.status=!event.status;
+          showToast(event.status?"已恢复接入；处理状态保持不变":"已暂停接入；处理状态保持不变");
           persist();renderList();return;
         }
-        if(toggle.dataset.toggle==="actions"&&!toggle.disabled&&eventRunState(event)!=="pending"&&event.status){
-          event.actionsOn=!event.actionsOn;persist();renderList();showToast(event.actionsOn?"处理已开启，事件运行中":"处理已关闭，事件暂停运行；接入保持开启");return;
+        if(toggle.dataset.toggle==="actions"&&!toggle.disabled){
+          if(eventRunState(event)==="running")confirmCancelPublishedRun(event,false);
+          else showVersionChoiceModal(event);
+          return;
         }
       }
       const opButton=ev.target.closest("[data-op]");
