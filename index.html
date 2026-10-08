@@ -104,12 +104,19 @@
     .filter-note { color: #98a5b7; font-size: 10px; }
     .table-card { overflow: visible; }
     #listPage > .table-card, #logsTab > .table-card { min-height: 0; display: flex; flex: 1; flex-direction: column; overflow: hidden; }
-    #listPage > .table-card > .table-scroll, #logsTab > .table-card > .table-scroll { min-height: 0; flex: 1; overflow: auto; }
+    #listPage > .table-card > .table-scroll, #logsTab > .table-card > .table-scroll { min-height: 0; flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-gutter: auto; }
     .table-card > .pagination { flex: none; }
     .table-scroll { overflow-x: auto; border-radius: 10px 10px 0 0; }
     table { width: 100%; border-collapse: collapse; white-space: nowrap; text-align: left; }
+    :is(.event-list-table,.log-table,.action-stats-table) { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+    :is(.event-list-table,.log-table,.action-stats-table) > thead { flex: none; overflow: hidden; scrollbar-gutter: stable; }
+    :is(.event-list-table,.log-table,.action-stats-table) > tbody { min-height: 0; flex: 1; overflow-y: auto; scrollbar-gutter: stable; }
+    :is(.event-list-table,.log-table,.action-stats-table) tr { width: 100%; display: grid; }
+    :is(.event-list-table,.log-table,.action-stats-table) tbody tr:has(td[colspan]) td { grid-column: 1 / -1; }
     .table-scroll th { position: sticky; top: 0; z-index: 1; }
     .event-list-table { width: 100%; min-width: 0; table-layout: fixed; }
+    .event-list-table colgroup { display: none; }
+    .event-list-table tr { grid-template-columns: 22% 22% 9% 9% 16% 7% 15%; }
     .event-list-table col:nth-child(1) { width: 22%; }
     .event-list-table col:nth-child(2) { width: 22%; }
     .event-list-table col:nth-child(3) { width: 9%; }
@@ -431,6 +438,8 @@
     .log-toolbar { margin-bottom: 10px; padding: 11px 13px; display: flex; flex: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; border: 1px solid #e6ebf2; border-radius: 9px; background: #fff; }
     .log-toolbar > .btn { margin-left: auto; flex: none; }
     .log-filters { display: flex; flex-wrap: wrap; gap: 7px; }
+    .log-table { min-width: 900px; }
+    .log-table tr { grid-template-columns: 18% 19% 14% 15% 14% 9% 11%; }
     .log-table th { font-size: 11px; }
     .log-table td { height: 52px; font-size: 12px; }
     .log-table .record-id { color: #4d6381; font: 11px var(--mono); }
@@ -440,7 +449,7 @@
     .modal.stats-dialog { width: min(1020px,calc(100vw - 28px)); height: min(640px,calc(100dvh - 36px)); max-height: calc(100dvh - 36px); display: flex; flex-direction: column; overflow: hidden; }
     .modal.stats-dialog .modal-head,.modal.stats-dialog .modal-foot { flex: none; }
     .modal.stats-dialog .modal-body { min-height: 0; padding-top: 12px; padding-bottom: 12px; flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .modal.stats-dialog .modal-body > .table-scroll { min-height: 0; flex: 1; overflow: auto; }
+    .modal.stats-dialog .modal-body > .table-scroll { min-height: 0; flex: 1; overflow-x: auto; overflow-y: hidden; scrollbar-gutter: auto; }
     .modal.stats-dialog .info-line { flex: none; }
     .action-stats-head { margin-bottom: 10px; display: flex; align-items: center; justify-content: flex-start; gap: 12px; flex: none; }
     .action-stats-version { width: 250px; min-width: 0; display: flex; align-items: center; gap: 9px; flex: none; }
@@ -451,6 +460,7 @@
     .action-stats-total span { color: #7083a3; font-size: 10px; }
     .action-stats-total strong { padding-left: 8px; color: #2c5dab; border-left: 1px solid #dce7f7; font-size: 16px; line-height: 1; font-variant-numeric: tabular-nums; text-align: right; }
     .action-stats-table { width: 100%; min-width: 680px; }
+    .action-stats-table tr { grid-template-columns: 13% 21% 13% 27% 13% 13%; }
     .action-stats-table td { height: 42px; }
     .result { display: inline-flex; align-items: center; gap: 5px; color: #398762; font-size: 10px; font-weight: 650; }
     .result.warn { color: #bc812a; }
@@ -661,7 +671,8 @@
     .hover-tooltip.below:after { top: -3px; bottom: auto; }
     .mobile-menu { display: none; }
     @media (max-width: 1380px) {
-      .event-list-table, .event-list-table tbody { width: 100%; display: block; }
+      .event-list-table { width: 100%; }
+      .event-list-table tbody { width: 100%; display: block; }
       .event-list-table colgroup, .event-list-table thead { display: none; }
       .event-list-table tbody tr:not([data-id]), .event-list-table tbody tr:not([data-id]) td { width: 100%; display: block; }
       .event-list-table tbody tr[data-id] { padding: 14px; display: grid; grid-template-columns: minmax(0,1.4fr) minmax(0,1fr) minmax(0,.75fr); gap: 13px 18px; border-bottom: 1px solid #e9edf3; }
@@ -1382,6 +1393,7 @@
       const from=document.getElementById("logFrom").value,to=document.getElementById("logTo").value;
       const filtered=logsForCurrentEvent().filter(function(l){const date=l.time.slice(0,10);return (!query||l.id.toLowerCase().includes(query))&&(!status||logOutcomeCategory(l)===status)&&(!version||l.version===version)&&(!from||date>=from)&&(!to||date<=to);});
       document.getElementById("logRows").innerHTML=filtered.length?filtered.map(logRow).join(""):'<tr><td colspan="7"><div class="empty">没有符合条件的事件记录</div></td></tr>';
+      document.getElementById("logRows").scrollTop=0;
       document.getElementById("logTotal").textContent="展示 "+filtered.length+" 条记录";
     }
     function actionStatsVersionTotals(e){
@@ -1430,6 +1442,7 @@
         document.getElementById("actionStatsTotal").textContent=total.toLocaleString();
         const rows=actionStatsRows(e,version);
         document.getElementById("actionStatsRows").innerHTML=rows.length?rows.map(function(row){return '<tr><td><span class="version-pill">'+esc(row.version)+'</span></td><td>'+esc(row.branch)+'</td><td>'+esc(row.type)+'</td><td>'+esc(row.name)+'</td><td style="color:#22956c;font-weight:700">'+row.success+'</td><td style="color:#d55858;font-weight:700">'+row.failed+'</td></tr>';}).join(""):'<tr><td colspan="6"><div class="empty" style="padding:34px">当前版本尚无执行动作统计</div></td></tr>';
+        document.getElementById("actionStatsRows").scrollTop=0;
       }
       document.getElementById("actionStatsVersion").addEventListener("change",function(ev){updateStats(ev.target.value);});
       updateStats("all");
@@ -2227,7 +2240,7 @@
       eventPage=target==="prev"?eventPage-1:target==="next"?eventPage+1:Number(target);
       renderRows();scrollListRowsToTop();
     });
-    function scrollListRowsToTop(){document.querySelector("#listPage > .table-card > .table-scroll").scrollTop=0;}
+    function scrollListRowsToTop(){document.querySelector("#listPage .event-list-table tbody").scrollTop=0;}
     document.getElementById("searchInput").addEventListener("input",function(e){filterState.search=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
     document.getElementById("sourceFilter").addEventListener("change",function(e){filterState.source=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
     document.getElementById("intakeFilter").addEventListener("change",function(e){filterState.intake=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
