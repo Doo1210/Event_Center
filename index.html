@@ -25,6 +25,17 @@
       --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
     }
     * { box-sizing: border-box; }
+    /* Keep the scrollbar lane reserved as content and dialogs change. */
+    html, textarea, .table-scroll, .version-list, .flow-panel .panel-body,
+    .condition-field-popup-list, .action-resource-list, .action-config-body,
+    .action-prompt-popup-list,
+    .modal:not(:is(.stats-dialog, .action-dialog, .test-dialog, .run-detail-dialog, .event-dialog)),
+    .modal.test-dialog .modal-body,
+    .modal.test-dialog .test-result, .run-panel-scroll, .run-data-json,
+    .run-json, .run-text-input, .modal.event-dialog .modal-body,
+    .event-param-body, .history-list, .event-source-tabs {
+      scrollbar-gutter: stable;
+    }
     body { margin: 0; color: var(--ink); background: var(--canvas); font-family: var(--sans); font-size: 13px; }
     button, input, select, textarea { font: inherit; }
     button { cursor: pointer; }
@@ -262,10 +273,10 @@
     .flow-panel .branch-card { margin-bottom: 7px; }
     .flow-panel .panel-title { font-size: 14px; }
     .flow-branch-count { padding: 4px 8px; color: #3970dc; border-radius: 99px; background: #edf3ff; font-size: 10px; font-weight: 700; white-space: nowrap; }
-    .branch-chain { padding-left: 24px; display: grid; gap: 8px; }
+    .branch-chain { padding-left: 20px; display: grid; gap: 8px; }
     .branch-chain-step { min-width: 0; position: relative; }
-    .branch-chain-step:not(:last-child):before { content: ""; width: 1px; position: absolute; top: 21px; bottom: -29px; left: -15px; background: #d9e5f7; }
-    .branch-chain-marker { width: 18px; height: 18px; position: absolute; top: 12px; left: -24px; z-index: 1; display: grid; place-items: center; color: #326fe3; border: 1px solid #bbcef2; border-radius: 50%; background: #fff; font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .branch-chain-step:not(:last-child):before { content: ""; width: 1px; position: absolute; top: 21px; bottom: -29px; left: -12px; background: #d9e5f7; }
+    .branch-chain-marker { width: 16px; height: 16px; position: absolute; top: 13px; left: -20px; z-index: 1; display: grid; place-items: center; color: #326fe3; border: 1px solid #bbcef2; border-radius: 50%; background: #fff; font-size: 9px; font-weight: 700; font-variant-numeric: tabular-nums; }
     .branch-chain-marker.is-fallback { color: #74859b; border-color: #d5dce7; background: #f8fafd; }
     .branch-chain .branch-card { margin-bottom: 0; }
     .flow-panel .branch-head { min-height: 42px; padding: 0 13px; border-bottom: 0; }
@@ -727,12 +738,12 @@
       .run-detail-layout { min-height: auto; flex: none; grid-template-columns: 1fr; }
       .run-panel { display: block; }
       .run-panel-scroll { max-height: none; overflow: visible; }
-      .run-panel:last-child .run-panel-scroll { overflow: visible; scrollbar-gutter: auto; }
+      .run-panel:last-child .run-panel-scroll { overflow: visible; }
       .run-panel:first-child .run-data-scroll { height: 330px; max-height: none; overflow: hidden; }
       .run-action-io { grid-template-columns: 1fr; }
       .branch-condition-row { grid-template-columns: minmax(0,1fr) 95px; }
       .modal.action-dialog { height: calc(100dvh - 20px); max-height: calc(100dvh - 20px); }
-      .modal.action-dialog .modal-body { overflow-y: auto; }
+      .modal.action-dialog .modal-body { overflow-y: auto; scrollbar-gutter: stable; }
       .action-dialog-layout { min-height: 740px; height: auto; grid-template-columns: 1fr; grid-template-rows: 270px minmax(450px,1fr); }
       .modal.event-dialog .modal-body { padding: 15px; }
       .modal.event-dialog .modal-foot { align-items: stretch; flex-direction: column; }
