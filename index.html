@@ -112,6 +112,7 @@
     :is(.event-list-table,.log-table,.action-stats-table) > thead { flex: none; overflow: hidden; scrollbar-gutter: stable; }
     :is(.event-list-table,.log-table,.action-stats-table) > tbody { min-height: 0; flex: 1; overflow-y: auto; scrollbar-gutter: stable; }
     :is(.event-list-table,.log-table,.action-stats-table) tr { width: 100%; display: grid; }
+    :is(.event-list-table,.log-table,.action-stats-table) th { min-width: 0; display: flex; align-items: center; }
     :is(.event-list-table,.log-table,.action-stats-table) tbody tr:has(td[colspan]) td { grid-column: 1 / -1; }
     .table-scroll th { position: sticky; top: 0; z-index: 1; }
     .event-list-table { width: 100%; min-width: 0; table-layout: fixed; }
@@ -814,7 +815,6 @@
             <thead><tr><th>事件名称</th><th>事件信息</th><th>接入开关<span class="table-help" data-tooltip="关闭后暂停接入新事件；处理开关和已发布版本保持不变。" tabindex="0" aria-label="关闭后暂停接入新事件；处理开关和已发布版本保持不变。">?</span></th><th>触发次数</th><th>事件处理</th><th>处理开关<span class="table-help" data-tooltip="关闭将取消当前版本的发布运行；开启时需要选择要发布的版本。接入开关独立控制。" tabindex="0" aria-label="关闭将取消当前版本的发布运行；开启时需要选择要发布的版本。接入开关独立控制。">?</span></th><th>操作</th></tr></thead>
             <tbody id="eventRows"></tbody>
           </table></div>
-          <div class="pagination"><span id="totalText">共 0 条事件</span><div class="page-controls" id="eventPageControls"></div></div>
         </section>
       </div>
       <div class="hidden" id="detailPage">
@@ -1070,8 +1070,8 @@
     let renderedConfigEventId = null;
     let renderedConfigView = null;
     let filterState = {search:"",source:"",intake:"",state:""};
-    const eventPageSize=10;
-    let eventPage=1;
+    const logPageSize=10;
+    let logPage=1;
     let modalAction = null;
     let toastTimer = null;
     let hoverTooltipTarget = null;
@@ -1118,13 +1118,7 @@
     function renderRows(){
       hideHoverTooltip();
       closeRowMenus();
-      const filteredRows = visibleEvents();
-      const pageCount=Math.max(1,Math.ceil(filteredRows.length/eventPageSize));
-      eventPage=Math.min(eventPage,pageCount);
-      const rows=filteredRows.slice((eventPage-1)*eventPageSize,eventPage*eventPageSize);
-      const pageControls=document.getElementById("eventPageControls");
-      pageControls.innerHTML='<span>每页 '+eventPageSize+' 条</span><button class="page-button" data-page="prev" aria-label="上一页" '+(eventPage===1?'disabled':'')+'>‹</button>'+Array.from({length:pageCount},function(_,index){const page=index+1;return '<button class="page-button '+(page===eventPage?'active':'')+'" data-page="'+page+'" aria-label="第 '+page+' 页" '+(page===eventPage?'aria-current="page"':'')+'>'+page+'</button>';}).join('')+'<button class="page-button" data-page="next" aria-label="下一页" '+(eventPage===pageCount?'disabled':'')+'>›</button>';
-      document.getElementById("totalText").textContent = "共 "+filteredRows.length+" 条事件";
+      const rows=visibleEvents();
       const body = document.getElementById("eventRows");
       if(!rows.length){ body.innerHTML = '<tr><td colspan="7"><div class="empty">⌕<strong>没有找到匹配的事件</strong><span>调整搜索词或筛选条件后再试</span></div></td></tr>'; return; }
       body.innerHTML = rows.map(function(e){
@@ -1301,17 +1295,25 @@
     }
     function renderLogs(){
       const rows=logsForCurrentEvent(),e=currentEvent();
+      logPage=1;
       const versionOptions=[...new Set(rows.map(function(r){return r.version;}).filter(function(v){return v&&v!=="—"&&v!=="-";}))];
       document.getElementById("logsTab").innerHTML=
         '<div class="log-toolbar"><div class="log-filters"><input class="field" id="logSearch" placeholder="搜索事件 ID" style="width:170px"><input class="field log-date" id="logFrom" type="date" aria-label="开始日期"><span class="filter-note" style="align-self:center">至</span><input class="field log-date" id="logTo" type="date" aria-label="结束日期"><select class="select" id="logVersion"><option value="">全部版本</option>'+versionOptions.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+(hasPublishedConfig(e)&&v===e.version?" · 运行中":"")+'</option>';}).join("")+'</select><select class="select" id="logStatus"><option value="">全部运行结果</option><option value="success">执行成功</option><option value="failure">执行失败</option><option value="not_executed">未执行</option><option value="unconfigured">未配置执行动作</option></select></div><button class="btn btn-primary btn-small" id="actionStatsBtn">执行动作统计</button></div>'+
-        '<section class="table-card"><div class="table-scroll"><table class="log-table"><thead><tr><th>事件 ID</th><th>接收时间</th><th>处理流程版本</th><th>命中分支</th><th>运行结果</th><th>耗时</th><th>操作</th></tr></thead><tbody id="logRows">'+(rows.length?rows.map(logRow).join(""):'<tr><td colspan="7"><div class="empty">暂无事件记录</div></td></tr>')+'</tbody></table></div><div class="pagination"><span id="logTotal">展示最近 '+rows.length+' 条记录</span></div></section>';
-      document.getElementById("logSearch").addEventListener("input",applyLogFilter);
-      document.getElementById("logStatus").addEventListener("change",applyLogFilter);
-      document.getElementById("logVersion").addEventListener("change",applyLogFilter);
-      document.getElementById("logFrom").addEventListener("change",applyLogFilter);
-      document.getElementById("logTo").addEventListener("change",applyLogFilter);
+        '<section class="table-card"><div class="table-scroll"><table class="log-table"><thead><tr><th>事件 ID</th><th>接收时间</th><th>处理流程版本</th><th>命中分支</th><th>运行结果</th><th>耗时</th><th>操作</th></tr></thead><tbody id="logRows"></tbody></table></div><div class="pagination"><span id="logTotal">共 0 条记录</span><div class="page-controls" id="logPageControls"></div></div></section>';
+      document.getElementById("logSearch").addEventListener("input",resetLogPage);
+      document.getElementById("logStatus").addEventListener("change",resetLogPage);
+      document.getElementById("logVersion").addEventListener("change",resetLogPage);
+      document.getElementById("logFrom").addEventListener("change",resetLogPage);
+      document.getElementById("logTo").addEventListener("change",resetLogPage);
       document.getElementById("actionStatsBtn").addEventListener("click",showActionStatsModal);
+      document.getElementById("logPageControls").addEventListener("click",function(ev){
+        const button=ev.target.closest("[data-page]");if(!button||button.disabled)return;
+        const target=button.dataset.page;
+        logPage=target==="prev"?logPage-1:target==="next"?logPage+1:Number(target);
+        applyLogFilter();
+      });
       document.getElementById("logRows").addEventListener("click",function(ev){const button=ev.target.closest("[data-log-id]");if(button){const log=rows.find(function(item){return item.id===button.dataset.logId;});if(log)showLogDetail(log);}});
+      applyLogFilter();
     }
     function coverageLogsForEvent(e){
       return coverageLogSpecs.map(function(spec){
@@ -1386,15 +1388,20 @@
       const resultClass=l.kind==="success"?"":l.kind==="fail"?"fail":l.kind==="warn"?"warn":"muted";
       return '<tr data-log-row="'+i+'"><td><code class="record-id">'+esc(l.id)+'</code></td><td>'+esc(l.time)+'</td><td><span class="version-pill">'+esc(l.version)+'</span></td><td>'+esc(l.branch)+'</td><td><span class="result '+resultClass+'">● '+esc(l.result)+'</span></td><td>'+esc(runDurationSeconds(runDurationMs(l.duration)))+'</td><td><button class="record-link" data-log-id="'+esc(l.id)+'">查看详情</button></td></tr>';
     }
+    function resetLogPage(){logPage=1;applyLogFilter();}
     function applyLogFilter(){
       const query=document.getElementById("logSearch").value.toLowerCase();
       const status=document.getElementById("logStatus").value;
       const version=document.getElementById("logVersion").value;
       const from=document.getElementById("logFrom").value,to=document.getElementById("logTo").value;
       const filtered=logsForCurrentEvent().filter(function(l){const date=l.time.slice(0,10);return (!query||l.id.toLowerCase().includes(query))&&(!status||logOutcomeCategory(l)===status)&&(!version||l.version===version)&&(!from||date>=from)&&(!to||date<=to);});
-      document.getElementById("logRows").innerHTML=filtered.length?filtered.map(logRow).join(""):'<tr><td colspan="7"><div class="empty">没有符合条件的事件记录</div></td></tr>';
+      const pageCount=Math.max(1,Math.ceil(filtered.length/logPageSize));
+      logPage=Math.min(logPage,pageCount);
+      const pageRows=filtered.slice((logPage-1)*logPageSize,logPage*logPageSize);
+      document.getElementById("logRows").innerHTML=pageRows.length?pageRows.map(logRow).join(""):'<tr><td colspan="7"><div class="empty">'+(query||status||version||from||to?"没有符合条件的事件记录":"暂无事件记录")+'</div></td></tr>';
       document.getElementById("logRows").scrollTop=0;
-      document.getElementById("logTotal").textContent="展示 "+filtered.length+" 条记录";
+      document.getElementById("logTotal").textContent="共 "+filtered.length+" 条记录";
+      document.getElementById("logPageControls").innerHTML='<span>每页 '+logPageSize+' 条</span><button class="page-button" data-page="prev" aria-label="上一页" '+(logPage===1?'disabled':'')+'>‹</button>'+Array.from({length:pageCount},function(_,index){const page=index+1;return '<button class="page-button '+(page===logPage?'active':'')+'" data-page="'+page+'" aria-label="第 '+page+' 页" '+(page===logPage?'aria-current="page"':'')+'>'+page+'</button>';}).join('')+'<button class="page-button" data-page="next" aria-label="下一页" '+(logPage===pageCount?'disabled':'')+'>›</button>';
     }
     function actionStatsVersionTotals(e){
       if(e.demo&&Number(e.count)===832)return coverageStats.map(function(item){
@@ -2234,17 +2241,11 @@
       closeRowMenus();
       doOperation(event,op);
     });
-    document.getElementById("eventPageControls").addEventListener("click",function(e){
-      const button=e.target.closest("[data-page]");if(!button||button.disabled)return;
-      const target=button.dataset.page;
-      eventPage=target==="prev"?eventPage-1:target==="next"?eventPage+1:Number(target);
-      renderRows();scrollListRowsToTop();
-    });
     function scrollListRowsToTop(){document.querySelector("#listPage .event-list-table tbody").scrollTop=0;}
-    document.getElementById("searchInput").addEventListener("input",function(e){filterState.search=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
-    document.getElementById("sourceFilter").addEventListener("change",function(e){filterState.source=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
-    document.getElementById("intakeFilter").addEventListener("change",function(e){filterState.intake=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
-    document.getElementById("statusFilter").addEventListener("change",function(e){filterState.state=e.target.value;eventPage=1;renderRows();scrollListRowsToTop();});
+    document.getElementById("searchInput").addEventListener("input",function(e){filterState.search=e.target.value;renderRows();scrollListRowsToTop();});
+    document.getElementById("sourceFilter").addEventListener("change",function(e){filterState.source=e.target.value;renderRows();scrollListRowsToTop();});
+    document.getElementById("intakeFilter").addEventListener("change",function(e){filterState.intake=e.target.value;renderRows();scrollListRowsToTop();});
+    document.getElementById("statusFilter").addEventListener("change",function(e){filterState.state=e.target.value;renderRows();scrollListRowsToTop();});
     document.getElementById("addEventBtn").addEventListener("click",function(){showEventModal(null);});
     document.getElementById("backBtn").addEventListener("click",backToList);
     document.getElementById("detailJumpBtn").addEventListener("click",function(){activeTab=activeTab==="config"?"logs":"config";if(activeTab==="config"){const e=currentEvent();selectedConfigView=hasPublishedConfig(e)?"current":"draft";renderedConfigEventId=null;}renderDetail();window.scrollTo(0,0);});
