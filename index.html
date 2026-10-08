@@ -24,7 +24,11 @@
       --sans: "Aptos", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif;
       --mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
     }
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
+    *::-webkit-scrollbar { width: 4px; height: 4px; }
+    *::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { border-radius: 99px; background: #e5ebf4; }
     /* Keep the scrollbar lane reserved as content and dialogs change. */
     html, textarea, .table-scroll, .version-list, .flow-panel .panel-body,
     .condition-field-popup-list, .action-resource-list, .action-config-body,
@@ -232,12 +236,7 @@
     .version-rail-title { padding: 0 10px 10px; color: #7789a4; font-size: 11px; font-weight: 700; }
     .version-pinned { flex: none; }
     .version-separator { height: 1px; margin: 8px 8px 8px; flex: none; background: #e9eef5; }
-    .version-list { min-height: 0; max-height: calc(100vh - 136px); max-height: calc(100dvh - 136px); margin-right: -8px; padding-right: 8px; display: grid; align-content: start; gap: 4px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
-    .version-list::-webkit-scrollbar { width: 4px; }
-    .version-list::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .version-list::-webkit-scrollbar-track { background: transparent; }
-    .version-list::-webkit-scrollbar-thumb { border-radius: 99px; background: #e5ebf4; }
-    .version-list:hover::-webkit-scrollbar-thumb { background: #d2ddec; }
+    .version-list { min-height: 0; max-height: calc(100vh - 136px); max-height: calc(100dvh - 136px); margin-right: -8px; padding-right: 8px; display: grid; align-content: start; gap: 4px; overflow-y: auto; overscroll-behavior: contain; }
     .version-entry { width: 100%; min-height: 46px; padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; gap: 5px; text-align: left; color: #425773; border: 1px solid transparent; border-radius: 7px; background: transparent; font-size: 11px; font-weight: 700; cursor: pointer; }
     .version-entry:hover { background: #f5f8fe; }
     .version-entry.active { color: #2864d9; border-color: #cbdcfb; background: #eef4ff; }
@@ -264,12 +263,7 @@
     .version-delete-guard .btn:disabled { pointer-events: none; }
     .flow-panel { min-height: 0; margin: 0; display: flex; flex: 1; flex-direction: column; overflow: hidden; border: 1px solid #e4eaf3; border-radius: 10px; background: #fff; }
     .flow-panel .panel-head { min-height: 46px; flex: none; }
-    .flow-panel .panel-body { min-height: 0; max-height: calc(100vh - 205px); max-height: calc(100dvh - 205px); padding: 12px 18px 14px 14px; flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
-    .flow-panel .panel-body::-webkit-scrollbar { width: 4px; }
-    .flow-panel .panel-body::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .flow-panel .panel-body::-webkit-scrollbar-track { background: transparent; }
-    .flow-panel .panel-body::-webkit-scrollbar-thumb { border-radius: 99px; background: #e5ebf4; }
-    .flow-panel .panel-body:hover::-webkit-scrollbar-thumb { background: #d2ddec; }
+    .flow-panel .panel-body { min-height: 0; max-height: calc(100vh - 205px); max-height: calc(100dvh - 205px); padding: 12px 18px 14px 14px; flex: 1; overflow-y: auto; overscroll-behavior: contain; }
     .flow-intro { margin: 0 0 11px; color: #8495ad; font-size: 11px; }
     .flow-panel .branch-card { margin-bottom: 7px; }
     .flow-panel .panel-title { font-size: 14px; }
@@ -341,7 +335,7 @@
     .condition-field-cell .field { width: 100%; }
     .condition-field-popup { width: 100%; max-height: 218px; position: absolute; top: calc(100% + 5px); left: 0; z-index: 110; overflow: hidden; border: 1px solid #dbe5f3; border-radius: 7px; background: #fff; box-shadow: 0 9px 24px #27466f22; box-sizing: border-box; }
     .condition-field-popup-head { padding: 8px 10px; color: #7486a0; border-bottom: 1px solid #edf1f6; background: #f8fafd; font-size: 10px; font-weight: 700; }
-    .condition-field-popup-list { max-height: 176px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #dce6f3 transparent; }
+    .condition-field-popup-list { max-height: 176px; overflow-y: auto; }
     .condition-field-popup-list button { width: 100%; min-height: 34px; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #405674; text-align: left; border: 0; border-bottom: 1px solid #f1f3f7; background: #fff; }
     .condition-field-popup-list button:last-child { border-bottom: 0; }
     .condition-field-popup-list button:hover,.condition-field-popup-list button.active { background: #edf4ff; }
@@ -360,10 +354,7 @@
     .action-type-tabs button.active { color: #2d67dd; background: #fff; box-shadow: 0 1px 5px #274b8718; }
     .action-search { padding: 10px 11px; border-bottom: 1px solid #eef1f6; }
     .action-search input { width: 100%; }
-    .action-resource-list { min-height: 0; padding: 8px; display: flex; flex: 1; flex-direction: column; gap: 6px; overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
-    .action-resource-list::-webkit-scrollbar,.action-config-body::-webkit-scrollbar { width: 4px; }
-    .action-resource-list::-webkit-scrollbar-button,.action-config-body::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .action-resource-list::-webkit-scrollbar-thumb,.action-config-body::-webkit-scrollbar-thumb { border-radius: 99px; background: #e5ebf4; }
+    .action-resource-list { min-height: 0; padding: 8px; display: flex; flex: 1; flex-direction: column; gap: 6px; overflow-y: auto; scrollbar-gutter: stable; }
     .action-resource-list button { width: 100%; padding: 10px 11px; display: flex; align-items: center; gap: 9px; flex: none; text-align: left; color: #405673; border: 1px solid #e5ebf3; border-radius: 7px; background: #fff; }
     .action-resource-list button:hover,.action-resource-list button.active { border-color: #9dbaf0; background: #f5f8ff; }
     .action-resource-list button.active { box-shadow: inset 3px 0 #3976f6; }
@@ -392,7 +383,7 @@
     .action-operation-head { padding: 11px 15px; flex: none; border-bottom: 1px solid #e8edf4; background: #fff; }
     .action-operation-head strong { display: block; color: #344f73; font-size: 12px; }
     .action-operation-head small { display: block; margin-top: 4px; color: #8999ae; font-size: 10px; }
-    .action-config-body { min-height: 0; padding: 14px 15px; flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
+    .action-config-body { min-height: 0; padding: 14px 15px; flex: 1; overflow-y: auto; }
     .action-config-empty { min-height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 7px; color: #9aa8bb; text-align: center; }
     .action-config-empty strong { color: #62748f; font-size: 12px; }
     .action-config-empty span { font-size: 10px; }
@@ -413,7 +404,7 @@
     .action-prompt-wrap textarea { width: 100%; min-height: 340px; padding: 11px; color: #405674; border: 1px solid #dfe6ef; border-radius: 7px; resize: vertical; font: 11px/1.6 var(--mono); }
     .action-prompt-popup { max-height: 180px; position: fixed; z-index: 130; overflow: hidden; border: 1px solid #dce6f3; border-radius: 8px; background: #fff; box-shadow: 0 10px 26px #1f3c692e; box-sizing: border-box; }
     .action-prompt-popup-head { padding: 9px 11px; color: #7185a0; border-bottom: 1px solid #eaf0f7; background: #f8fafd; font-size: 10px; font-weight: 700; }
-    .action-prompt-popup-list { max-height: 141px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #dce6f3 transparent; }
+    .action-prompt-popup-list { max-height: 141px; overflow-y: auto; }
     .action-prompt-popup-list button { width: 100%; min-height: 32px; padding: 7px 11px; display: block; color: #48607f; text-align: left; border: 0; border-bottom: 1px solid #f1f3f7; background: #fff; font: 11px var(--mono); }
     .action-prompt-popup-list button:last-child { border-bottom: 0; }
     .action-prompt-popup-list button:hover,.action-prompt-popup-list button.active { color: #2764d8; background: #edf4ff; }
@@ -478,16 +469,11 @@
     .action-dialog-layout.is-edit .action-config-panel { height: 100%; }
     .modal.publish-dialog { width: min(560px,calc(100vw - 28px)); }
     .modal.test-dialog { width: min(1160px,calc(100vw - 28px)); height: min(860px,calc(100vh - 36px)); max-height: min(860px,calc(100vh - 36px)); height: min(860px,calc(100dvh - 36px)); max-height: min(860px,calc(100dvh - 36px)); display: flex; flex-direction: column; overflow: hidden; }
-    .modal.test-dialog .modal-body { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow-y: auto; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
+    .modal.test-dialog .modal-body { min-height: 0; flex: 1; display: flex; flex-direction: column; overflow-y: auto; scrollbar-gutter: stable; }
     .modal.test-dialog .test-layout { min-height: 370px; flex: 1; }
     .modal.test-dialog .test-layout .form-field { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
     .modal.test-dialog #testPayload { min-height: 320px; flex: 1; resize: none; }
-    .modal.test-dialog .test-result { min-width: 0; min-height: 320px; flex: 1; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
-    .modal.test-dialog .modal-body::-webkit-scrollbar,.modal.test-dialog .test-result::-webkit-scrollbar,.history-list::-webkit-scrollbar { width: 4px; }
-    .modal.test-dialog .modal-body::-webkit-scrollbar-button,.modal.test-dialog .test-result::-webkit-scrollbar-button,.history-list::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .modal.test-dialog .modal-body::-webkit-scrollbar-track,.modal.test-dialog .test-result::-webkit-scrollbar-track,.history-list::-webkit-scrollbar-track { background: transparent; }
-    .modal.test-dialog .modal-body::-webkit-scrollbar-thumb,.modal.test-dialog .test-result::-webkit-scrollbar-thumb,.history-list::-webkit-scrollbar-thumb { border-radius: 99px; background: #e5ebf4; }
-    .modal.test-dialog .modal-body:hover::-webkit-scrollbar-thumb,.modal.test-dialog .test-result:hover::-webkit-scrollbar-thumb,.history-list:hover::-webkit-scrollbar-thumb { background: #d2ddec; }
+    .modal.test-dialog .test-result { min-width: 0; min-height: 320px; flex: 1; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
     .modal.run-detail-dialog { width: min(1100px,calc(100vw - 28px)); height: min(820px,calc(100dvh - 36px)); max-height: calc(100dvh - 36px); display: flex; flex-direction: column; overflow: hidden; }
     .modal.run-detail-dialog .modal-head,.modal.run-detail-dialog .modal-foot { flex: none; }
     .modal.run-detail-dialog .modal-foot { justify-content: flex-end; }
@@ -507,12 +493,7 @@
     .run-panel-head p { margin: 5px 0 0; color: #8b9ab0; font-size: 10px; }
     .run-panel-scroll { min-height: 0; flex: 1; padding: 13px; overflow: auto; }
     .run-panel:last-child .run-panel-scroll { overflow-x: hidden; scrollbar-gutter: stable; }
-    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input) { overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
-    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input)::-webkit-scrollbar { width: 4px; height: 4px; }
-    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input)::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input)::-webkit-scrollbar-track { background: transparent; }
-    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input)::-webkit-scrollbar-thumb { border-radius: 99px; background: #e5ebf4; }
-    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input):hover::-webkit-scrollbar-thumb { background: #d2ddec; }
+    .modal.run-detail-dialog :is(.modal-body,.run-panel-scroll,.run-json,.run-text-input) { overscroll-behavior: contain; }
     .run-data-scroll { display: flex; flex-direction: column; overflow: hidden; }
     .run-data-scroll .run-source-meta,.run-data-scroll .run-section-label { flex: none; }
     .run-data-json { min-height: 0; flex: 1; overflow: auto; }
@@ -643,7 +624,7 @@
     .history-popover[hidden] { display: none; }
     .history-popover-title { margin-bottom: 9px; overflow: hidden; color: #52647e; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; font-weight: 700; }
     .history-popover .history-search { width: 100%; height: 31px; min-height: 31px; margin-bottom: 8px; padding: 0 9px; border: 1px solid #dfe6ef; border-radius: 6px; color: #3e526d; font-size: 11px; }
-    .history-list { max-height: min(440px,calc(100dvh - 260px)); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #e5ebf4 transparent; }
+    .history-list { max-height: min(440px,calc(100dvh - 260px)); overflow-y: auto; }
     .history-item { width: 100%; padding: 9px; display: block; border: 0; border-bottom: 1px solid #edf1f6; background: #fff; text-align: left; }
     .history-item:last-child { border-bottom: 0; }
     .history-item:hover,.history-item:focus-visible { border-radius: 5px; background: #f3f7ff; }
