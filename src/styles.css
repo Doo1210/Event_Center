@@ -290,7 +290,7 @@ html { scrollbar-gutter: stable; }
 .ec-modal__header, .ec-modal__footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex: none; padding: 14px 18px; }.ec-modal__header { border-bottom: 1px solid var(--ec-line); }.ec-modal__header h2 { font-size: 17px; }.ec-modal__footer { justify-content: flex-end; border-top: 1px solid var(--ec-line); }
 .ec-modal__body { min-height: 0; overflow: auto; padding: 18px; }.ec-modal__body > .ec-field + .ec-field { margin-top: 14px; }
 .ec-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 16px; }.ec-field--full { grid-column: 1 / -1; }.ec-field { min-width: 0; }.ec-field label { display: block; margin-bottom: 5px; font-size: 12px; font-weight: 700; }.ec-field label b, .ec-param-row b { color: var(--ec-red); }
-.ec-field input, .ec-field textarea, .ec-field select, .ec-condition-editor input, .ec-condition-editor select, .ec-param-row input, .ec-param-row select, .ec-inline-actions select, .ec-resource-search { width: 100%; min-height: 34px; padding: 7px 9px; border: 1px solid var(--ec-line); border-radius: 6px; background: #fff; color: var(--ec-ink); }.ec-field textarea { resize: vertical; }.ec-field small { display: block; margin-top: 5px; color: var(--ec-muted); font-size: 11px; }.ec-field input[readonly] { background: #f6f8fb; }
+.ec-field input, .ec-field textarea, .ec-field select, .ec-condition-editor input, .ec-condition-editor select, .ec-param-row input, .ec-param-row select, .ec-inline-actions select, .ec-resource-search { width: 100%; min-height: 34px; padding: 7px 9px; border: 1px solid var(--ec-line); border-radius: 6px; background: #fff; color: var(--ec-ink); }.ec-field textarea { resize: vertical; }.ec-field small { display: block; margin-top: 5px; color: var(--ec-muted); font-size: 11px; }.ec-field input[readonly] { border-color: #dce4ef; background: #f2f5f9; color: #60738e; cursor: default; }
 .ec-section-title { margin: 20px 0 10px; padding-bottom: 7px; border-bottom: 1px solid var(--ec-line); font-size: 13px; font-weight: 700; }
 .ec-source-options { display: flex; flex-wrap: wrap; gap: 7px; }.ec-source-options label { cursor: pointer; }.ec-source-options input { position: absolute; opacity: 0; }.ec-source-options span { display: block; padding: 7px 11px; border: 1px solid var(--ec-line); border-radius: 6px; color: var(--ec-muted); }.ec-source-options .is-active span { border-color: var(--ec-blue); background: var(--ec-blue-soft); color: var(--ec-blue); font-weight: 700; }.ec-source-options input:focus-visible + span { outline: 2px solid var(--ec-blue); outline-offset: 2px; }
 .ec-source-fields { margin-top: 16px; }.ec-readonly-note { padding: 9px 11px; background: #f6f8fb; border-radius: 6px; color: var(--ec-muted); font-size: 12px; }
@@ -298,18 +298,22 @@ html { scrollbar-gutter: stable; }
 
 /* Event intake dialog follows the 1023 form's tabs, sections and preview. */
 .ec-modal-backdrop--event-form { padding: 18px; background: rgba(18, 35, 61, .42); backdrop-filter: blur(3px); }
-.ec-modal--event-form { width: min(860px, calc(100vw - 28px)); max-height: min(820px, calc(100dvh - 36px)); overflow: hidden; border: 1px solid #e1e7f0; border-radius: 12px; box-shadow: 0 24px 70px rgba(24, 44, 76, .22); animation: ec-modal-appear .16s ease-out; }
+.ec-modal--event-form { width: min(860px, calc(100vw - 28px)); max-height: min(820px, calc(100dvh - 36px)); overflow: hidden; border: 1px solid #e1e7f0; border-radius: 12px; box-shadow: 0 24px 70px rgba(24, 44, 76, .22); font-family: "Aptos", "Microsoft YaHei UI", "Microsoft YaHei", system-ui, sans-serif; font-size: 13px; line-height: normal; animation: ec-modal-appear .16s ease-out; }
 .ec-modal--event-form .ec-modal__header { min-height: 53px; padding: 0 17px; border-color: #edf0f5; }
 .ec-modal--event-form .ec-modal__header h2 { color: #2e4361; font-size: 13px; font-weight: 750; }
 .ec-modal--event-form .ec-modal__header .ec-icon-button { color: #8995a6; font-size: 19px; }
 .ec-modal--event-form .ec-modal__body { flex: 1; min-height: 0; padding: 19px 22px; overflow-y: auto; }
+.ec-modal--event-form .ec-modal__body, .ec-event-param-body, .ec-event-source-tabs { scrollbar-gutter: stable; }
+.ec-modal--event-form :focus-visible { outline: 3px solid rgba(57, 118, 246, .22); outline-offset: 1px; }
 .ec-modal--event-form .ec-modal__footer { justify-content: space-between; min-height: 55px; padding: 12px 22px; border-color: #edf0f5; background: #fbfcfe; }
-.ec-event-form-footer-actions { display: flex; align-items: center; gap: 7px; }
+.ec-event-form-footer-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 7px; }
 .ec-event-form-note { color: #8795a9; font-size: 10px; }
 .ec-modal--event-form .ec-modal__footer .ec-button { min-height: 28px; padding: 0 9px; font-size: 11px; }
+.ec-modal--event-form .ec-modal__footer .ec-button--primary { box-shadow: 0 4px 10px #3976f62c; }
 .ec-modal--event-form .ec-field label { margin-bottom: 6px; color: #586c88; font-size: 11px; font-weight: 650; }
 .ec-modal--event-form .ec-field label b { color: #da6b61; }
 .ec-modal--event-form :is(.ec-field input, .ec-field select, .ec-field textarea) { min-height: 36px; border-color: #dfe6ef; color: #3e526d; font-size: 12px; }
+.ec-modal--event-form .ec-field input[readonly] { border-color: #dce4ef; background: #f2f5f9; color: #60738e; cursor: default; }
 .ec-modal--event-form .ec-field small { color: #94a2b6; font-size: 10px; line-height: 1.5; }
 .ec-event-source-wrap { margin-top: 17px; }
 .ec-event-source-label { margin-bottom: 8px; color: #586c88; font-size: 11px; font-weight: 700; }
@@ -321,6 +325,8 @@ html { scrollbar-gutter: stable; }
 .ec-event-form-section { padding: 18px 0; }
 .ec-event-form-section > h3 { margin-bottom: 12px; color: #334866; font-size: 12px; }
 .ec-modal--event-form .ec-source-fields { margin-top: 0; gap: 14px; }
+.ec-modal--event-form .ec-source-fields.ec-event-webhook-fields { grid-template-columns: 184px minmax(0, 1fr); }
+.ec-event-webhook-fields .ec-event-inline { min-width: 0; }
 .ec-event-mode-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; margin-bottom: 16px; padding: 3px; border: 1px solid #e3e9f1; border-radius: 7px; background: #f7f9fc; }
 .ec-event-mode-tabs button { min-height: 30px; padding: 0 12px; border: 0; border-radius: 5px; background: transparent; color: #7a8aa2; font-size: 11px; }
 .ec-event-mode-tabs button.is-active { background: #fff; color: #2b65dc; box-shadow: 0 1px 4px #172b4d19; font-weight: 700; }
@@ -362,14 +368,23 @@ html { scrollbar-gutter: stable; }
 .ec-modal--event-form .ec-event-radio-group input { width: 14px; min-height: 14px; height: 14px; margin: 0; accent-color: #3976f6; }
 .ec-event-advanced-toggle { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 12px; padding: 0; border: 0; background: transparent; color: #356dd7; font-size: 11px; font-weight: 700; }
 .ec-event-advanced-body { margin-top: 13px; }
+.ec-event-param-intro { margin: 15px 0 14px !important; line-height: 1.6; }
+.ec-event-param-intro + .ec-event-param-group { margin-top: 0; }
 .ec-event-param-group { margin-top: 11px; overflow: hidden; border: 1px solid #e6ebf3; border-radius: 7px; }
 .ec-event-param-group header { display: flex; align-items: center; justify-content: space-between; padding: 9px 11px; background: #f9fbfd; }
 .ec-event-param-group header strong { color: #455a78; font-size: 10px; }
-.ec-event-param-group header strong span { color: #9aa8ba; }
 .ec-event-param-body { max-height: 170px; padding: 9px 11px; overflow-y: auto; }
+.ec-event-param-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, .8fr) 52px 24px; align-items: center; gap: 6px; margin-bottom: 6px; }
+.ec-event-param-row:last-child { margin-bottom: 0; }
+.ec-modal--event-form .ec-event-param-row > input,
+.ec-modal--event-form .ec-event-param-row > select { width: 100%; min-width: 0; min-height: 29px; height: 29px; padding: 4px 7px; border: 1px solid #e0e6ef; border-radius: 5px; background: #fff; color: #405371; font-size: 10px; }
+.ec-modal--event-form .ec-event-param-row label { display: flex; align-items: center; gap: 3px; margin: 0; color: #73829a; font-size: 9px; white-space: nowrap; }
+.ec-modal--event-form .ec-event-param-row label input { width: 13px; min-height: 13px; height: 13px; margin: 0; padding: 0; accent-color: #3976f6; }
+.ec-event-param-row .ec-icon-button { width: 24px; height: 24px; font-size: 18px; }
+.ec-event-raw-note { margin-top: 9px !important; }
 .ec-event-empty { padding: 8px; color: #9daabc; font-size: 10px; text-align: center; }
-.ec-modal--event-form .ec-inline-fields { grid-template-columns: 1fr 100px 28px; }
 @media (max-width: 720px) { .ec-modal--event-form .ec-modal__body { padding: 15px; }.ec-modal--event-form .ec-modal__footer { align-items: stretch; flex-direction: column; }.ec-event-form-footer-actions { justify-content: flex-end; }.ec-modal--event-form .ec-event-timer-fields { grid-template-columns: 1fr; }.ec-event-source-tabs { grid-template-columns: repeat(5, minmax(74px, 1fr)); overflow-x: auto; } }
+@media (max-width: 560px) { .ec-modal--event-form .ec-source-fields.ec-event-webhook-fields { grid-template-columns: minmax(0, 1fr); } }
 .ec-condition-editor { display: grid; grid-template-columns: 23px minmax(0, 1.2fr) minmax(0, .9fr) minmax(0, .8fr) 28px; gap: 6px; align-items: center; margin-bottom: 7px; }.ec-condition-index { color: var(--ec-muted); font: 700 12px "Cascadia Code", Consolas, monospace; }
 .ec-inline-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }.ec-inline-actions label { display: flex; align-items: center; gap: 7px; color: var(--ec-muted); font-size: 12px; }.ec-inline-actions select { width: auto; }
 .ec-action-editor { display: grid; grid-template-columns: 270px minmax(0, 1fr); min-height: 380px; border: 1px solid var(--ec-line); border-radius: 7px; overflow: hidden; }.ec-action-picker { padding: 12px; border-right: 1px solid var(--ec-line); }.ec-kind-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; }.ec-kind-tabs button { padding: 7px 3px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--ec-muted); font-size: 11px; }.ec-kind-tabs button.is-active { border-color: var(--ec-blue); color: var(--ec-blue); font-weight: 700; }.ec-resource-search { margin: 11px 0; }.ec-resource-list { max-height: 300px; overflow: auto; }.ec-resource-list button { display: block; width: 100%; padding: 9px; margin-bottom: 5px; border: 1px solid transparent; border-radius: 6px; background: transparent; text-align: left; }.ec-resource-list button.is-active { border-color: #c7d8fc; background: var(--ec-blue-soft); }.ec-resource-list strong, .ec-resource-list small { display: block; }.ec-resource-list small { margin-top: 3px; color: var(--ec-muted); font-size: 11px; }.ec-action-config { padding: 15px 18px; }.ec-action-config__head { padding-bottom: 14px; border-bottom: 1px solid var(--ec-line); margin-bottom: 15px; }.ec-action-config__head p { margin-top: 4px; color: var(--ec-muted); font-size: 12px; }.ec-action-empty { display: grid; place-items: center; min-height: 300px; color: var(--ec-muted); }.ec-param-row { display: grid; grid-template-columns: 145px 120px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 9px; }.ec-param-row label { font-weight: 700; font-size: 12px; }.ec-param-row label small { display: block; color: var(--ec-muted); font-weight: 400; }

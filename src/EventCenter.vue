@@ -75,7 +75,35 @@ export default {
     notify(message) { this.toast = message; if (this.toastTimer) clearTimeout(this.toastTimer); this.toastTimer = setTimeout(() => { this.toast = ''; }, 3500); },
     openForm(event) { this.editingEvent = event || null; this.formError = ''; this.formVisible = true; },
     closeForm() { this.formVisible = false; this.editingEvent = null; this.formError = ''; },
-    async saveEvent(payload) { this.busy = true; this.formError = ''; const editing = !!this.editingEvent; try { const updated = editing ? await this.api.updateEvent(this.editingEvent.id, payload) : await this.api.createEvent(payload); this.closeForm(); await this.loadEvents(); if (this.selectedEvent && this.selectedEvent.id === updated.id) this.selectedEvent = updated; this.notify(editing ? '事件接入配置已保存' : '事件已创建，默认未接入·未启用处理'); } catch (error) { this.formError = error.message || '保存事件失败'; } finally { this.busy = false; } },
+    async saveEvent(payload, options = {}) {
+      if (this.busy) return;
+      this.busy = true;
+      this.formError = '';
+      const editing = !!this.editingEvent;
+      try {
+        const updated = editing
+          ? await this.api.updateEvent(this.editingEvent.id, payload)
+          : await this.api.createEvent(payload);
+        if (!editing && options.enableIntake) {
+          try {
+            await this.api.setIntake(updated.id, true);
+          } catch (error) {
+            this.closeForm();
+            await this.loadEvents();
+            this.notify('事件已创建，但启用接入失败：' + (error.message || '请在列表中重试'));
+            return;
+          }
+        }
+        this.closeForm();
+        await this.loadEvents();
+        if (this.selectedEvent && this.selectedEvent.id === updated.id) this.selectedEvent = updated;
+        this.notify(editing ? '事件接入配置已保存' : options.enableIntake ? '事件已创建并启用接入；处理动作保持关闭' : '事件已创建，默认未接入·未启用处理');
+      } catch (error) {
+        this.formError = error.message || '保存事件失败';
+      } finally {
+        this.busy = false;
+      }
+    },
     async toggleIntake(event) { try { await this.api.setIntake(event.id, !event.intakeEnabled); await this.loadEvents(); this.notify(event.intakeEnabled ? '已暂停接入；处理状态保持不变' : '已恢复接入；处理状态保持不变'); } catch (error) { this.notify(error.message || '修改接入状态失败'); } },
     toggleProcessing(event) { if (processingState(event) === 'running') { this.confirmation = { title: '取消发布运行', message: `取消 ${event.currentVersion} 的发布运行后，版本保留在历史列表，接入状态不变。`, run: async () => { await this.api.cancelPublish(event.id); await this.loadEvents(); this.notify('已取消发布运行；接入状态保持不变'); } }; return; } if (!(event.versions || []).length) { this.notify('请先进入配置处理，创建并发布一个版本'); return; } this.versionChoice = event; this.chosenVersion = event.versions[0].version; },
     async publishChosenVersion() { if (!this.versionChoice || !this.chosenVersion) return; const eventId = this.versionChoice.id; const version = this.chosenVersion; const snapshot = this.versionChoice.versions.find(item => item.version === version); const run = async () => { await this.api.publishVersion(eventId, version); await this.loadEvents(); this.notify('版本已发布运行；接入状态保持不变'); }; this.versionChoice = null; if (snapshot && !snapshot.tested) { this.confirmation = { title: '发布未测试版本', message: `${version} 尚未测试。建议先测试分支判断和执行动作；确认后仍可继续发布。`, run }; return; } this.busy = true; try { await run(); } catch (error) { this.notify(error.message || '发布失败'); } finally { this.busy = false; } },
