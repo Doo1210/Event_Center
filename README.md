@@ -1,6 +1,6 @@
 # 事件中心 Vue 2 重构原型
 
-本目录把事件驱动1023的静态原型改为 Vue 2.6 + JavaScript 单文件组件，按事件列表、接入配置、处理流程、模拟测试和运行记录拆分。代码可独立演示，也可作为 @wanwu/components 中新 EventCenter 模块的迁移起点。
+本目录把事件驱动1023的静态原型改为 Vue 2.6 + JavaScript 单文件组件，按事件列表、接入配置、处理流程、流程测试和运行记录拆分。代码可独立演示，也可作为 @wanwu/components 中新 EventCenter 模块的迁移起点。
 
 ## 运行
 
@@ -11,7 +11,7 @@
     npm test
     npm run build
 
-demo/main.js 注入 createMockEventCenterApi()。演示数据只存在本次页面运行的内存中，刷新后恢复初始样例；模拟测试不会调用真实动作，也不会新增正式运行记录。初始数据按 1023 原型提供 19 个事件、综合处理流程的草稿与三个版本、分组工具目录，以及历史事件样例。
+demo/main.js 注入 createMockEventCenterApi()。演示数据只存在本次页面运行的内存中，刷新后恢复初始样例；流程测试生成一次完整运行的样例轨迹，包含每个动作的状态、耗时及输入输出，不调用外部资源，也不新增正式运行记录或统计。初始数据按 1023 原型提供 19 个事件、综合处理流程的草稿与三个版本、分组工具目录，以及历史事件样例。
 
 ## GitHub Pages 部署
 
@@ -33,7 +33,7 @@ demo/main.js 注入 createMockEventCenterApi()。演示数据只存在本次页�
 
 独立演示显式设置 showSidebar: true，展示与 1023 原型一致的 180 px 左侧导航。该 prop 默认 false；集成进已有导航的 wanwu-web 时沿用宿主侧栏，避免重复导航。窄屏下演示侧栏收起，可通过右上角按钮展开。
 
-api 的方法均返回 Promise。事件列表返回 { items, total }，记录列表返回 { items, total, page, pageSize }；创建、编辑和版本操作返回更新后的完整事件，deleteEvent 返回确认结果，simulate 返回模拟轨迹。失败时抛出带用户可读 message 的 Error。
+api 的方法均返回 Promise。事件列表返回 { items, total }，记录列表返回 { items, total, page, pageSize }；创建、编辑和版本操作返回更新后的完整事件，deleteEvent 返回确认结果，simulate 返回测试执行轨迹与动作结果。失败时抛出带用户可读 message 的 Error。
 
 前端服务能力：listEvents、getEvent、createEvent、updateEvent、setIntake、duplicateEvent、deleteEvent、saveDraft、publishDraft、publishVersion、cancelPublish、deleteVersion、copyVersionToDraft、updateVersionDescription、listResources、simulate、listRuns、getRun、getActionStats。入参与返回数据可参照 src/services/mockApi.mjs；现有后端的映射和缺口见规划文档。
 

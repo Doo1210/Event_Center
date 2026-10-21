@@ -19,13 +19,18 @@ test('发布只改变处理状态，生成空白草稿并保留接入状态', as
   assert.ok(cancelled.versions.some(version => version.version === 'v1.0.0'));
 });
 
-test('模拟测试不会新增正式记录或动作统计', async () => {
+test('测试返回完整流程的样例执行详情，不新增正式记录或统计', async () => {
   const api = createMockEventCenterApi();
   const beforeRuns = await api.listRuns('evt-factory');
   const beforeStats = await api.getActionStats('evt-factory');
   const result = await api.simulate('evt-factory', { version: 'draft', payload: { device_id: 'A12', temperature: 95, status: 'critical' } });
   assert.equal(result.branch, '严重异常');
-  assert.ok(result.actions.every(action => action.status === 'simulated'));
+  assert.equal(result.result, 'success');
+  assert.ok(result.actions.every(action => action.status === 'success' && action.durationMs > 0 && action.output));
+  assert.equal(result.actions[0].input.deviceId, 'A12');
+  assert.equal(result.actions[0].output.status, '已创建');
+  assert.ok(result.durationMs >= Math.max(...result.actions.map(action => action.durationMs)));
+  assert.match(result.trace[2].title, /执行动作/);
   assert.equal((await api.listRuns('evt-factory')).total, beforeRuns.total);
   assert.deepEqual(await api.getActionStats('evt-factory'), beforeStats);
   assert.equal((await api.getEvent('evt-factory')).draft.tested, true);

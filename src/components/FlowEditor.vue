@@ -45,7 +45,7 @@
     <BaseModal :visible="publishVisible" :title="selected === 'draft' ? '发布草稿' : '发布历史版本'" size="publish" @close="publishVisible = false">
       <div class="ec-field"><label>版本号</label><input v-if="selected === 'draft'" v-model.trim="publishForm.version" placeholder="例如 v1.2.3" /><input v-else :value="selected" readonly /></div>
       <div class="ec-field"><label>版本描述</label><input v-model.trim="publishForm.description" maxlength="80" placeholder="简要说明配置变更" /></div>
-      <p v-if="!selectedSnapshot.tested" class="ec-warning">此版本尚未测试。建议先测试分支判断和动作选择，再决定是否发布。</p>
+      <p v-if="!selectedSnapshot.tested" class="ec-warning">此版本尚未测试。建议先运行测试，查看分支判断和动作执行结果，再决定是否发布。</p>
       <p v-if="publishError" class="ec-form-error" role="alert">{{ publishError }}</p>
       <template #footer><span></span><div class="ec-modal__footer-actions"><button type="button" class="ec-button" @click="publishVisible = false">取消</button><button v-if="!selectedSnapshot.tested" type="button" class="ec-button" @click="publishVisible = false; testVisible = true">先去测试</button><button type="button" class="ec-button ec-button--primary" :disabled="busy" @click="confirmPublish">{{ busy ? '发布中…' : '继续发布' }}</button></div></template>
     </BaseModal>

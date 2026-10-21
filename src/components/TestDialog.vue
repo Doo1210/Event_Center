@@ -17,18 +17,18 @@
         <textarea v-model="payloadText" spellcheck="false" aria-label="事件数据 JSON" />
       </section>
       <section class="ec-test-panel">
-        <div class="ec-panel-heading"><h3>执行详情</h3><span v-if="result" class="ec-test-status"><i />模拟完成</span></div>
+        <div class="ec-panel-heading"><h3>执行详情</h3><span v-if="result" class="ec-test-status" :class="{ 'is-failed': result.result === 'failure' }"><i />{{ resultName(result.result) }}</span></div>
         <div class="ec-test-result">
-          <p v-if="!result && !error" class="ec-empty-detail">运行一次模拟事件后，查看条件匹配和动作结果。</p>
+          <p v-if="!result && !error" class="ec-empty-detail">运行一次测试后，查看条件匹配和动作执行结果。</p>
           <p v-if="error" class="ec-form-error" role="alert">{{ error }}</p>
           <template v-if="result">
-            <div v-for="(step, index) in result.trace" :key="index" class="ec-test-step">
+            <div v-for="(step, index) in result.trace" :key="index" class="ec-test-step" :class="{ 'is-failed': result.result === 'failure' && index >= 2 }">
               <time>{{ traceTime(step.offsetMs) }}</time><strong>{{ step.title }}</strong><small>{{ step.detail }}</small>
               <div v-if="index === 2 && result.actions.length" class="ec-test-step__actions">
-                <article v-for="(action, actionIndex) in result.actions" :key="actionIndex" class="ec-test-action-card">
-                  <div><strong>{{ kindName(action.kind) }} · {{ action.name }}</strong><span>模拟命中</span></div>
-                  <small>仅计算动作选择，不调用真实服务</small>
-                  <details><summary>输入输出</summary><div class="ec-test-action-io"><div><label>{{ typeof action.input === 'string' ? '输入 · 文字指令' : '输入' }}</label><pre>{{ formatValue(action.input) }}</pre></div><div><label>输出</label><p>本次模拟未调用真实动作，无输出数据。</p></div></div></details>
+                <article v-for="(action, actionIndex) in result.actions" :key="actionIndex" class="ec-test-action-card" :class="{ 'is-failed': action.status === 'failure' }">
+                  <div><strong>{{ kindName(action.kind) }} · {{ action.name }}</strong><span>{{ resultName(action.status) }}</span></div>
+                  <small><template v-if="action.startedAt && action.finishedAt">开始 {{ clock(action.startedAt) }}　完成 {{ clock(action.finishedAt) }}　·　</template>{{ duration(action.durationMs) }}</small>
+                  <details><summary>输入输出</summary><div class="ec-test-action-io"><div><label>{{ typeof action.input === 'string' ? '输入 · 文字指令' : '输入' }}</label><pre>{{ formatValue(action.input) }}</pre></div><div><label>{{ action.status === 'failure' ? '错误输出' : '输出' }}</label><pre>{{ formatValue(action.output) }}</pre></div></div></details>
                 </article>
               </div>
             </div>
@@ -36,7 +36,7 @@
         </div>
       </section>
     </div>
-    <p class="ec-test-note">测试使用所选版本的配置，不会触发真实动作，也不会计入运行记录和动作统计。</p>
+    <p class="ec-test-note">测试使用所选版本完整运行一次处理流程；本次测试不计入正式事件记录和动作统计。</p>
     <template #footer><span></span><div class="ec-modal__footer-actions"><button type="button" class="ec-button" @click="$emit('close')">关闭</button><button type="button" class="ec-button ec-button--primary" :disabled="running" @click="run">{{ running ? '运行中…' : '▷　运行测试' }}</button></div></template>
   </BaseModal>
 </template>
@@ -61,9 +61,12 @@ export default {
     closeHistoryOnEscape(event) { if (this.visible && this.showHistory && event.key === 'Escape') { this.showHistory = false; event.stopPropagation(); } },
     historySummary(payload) { const entries = Object.entries(payload && typeof payload === 'object' ? payload : {}).filter(([key]) => !['event_id', 'source'].includes(key)).slice(0, 3); return entries.map(([key, value]) => `${key}: ${String(typeof value === 'object' ? JSON.stringify(value) : value).slice(0, 35)}`).join(' · ') || '点击填入这条事件数据'; },
     kindName(kind) { return { tool: '工具', workflow: '工作流', agent: '智能体', expert: '专家' }[kind] || kind; },
+    resultName(value) { return { success: '执行成功', failure: '执行失败', unconfigured: '未配置执行动作' }[value] || value; },
+    duration(milliseconds) { const seconds = Number(milliseconds || 0) / 1000; return `${seconds < 1 ? seconds.toFixed(3).replace(/0+$/, '').replace(/\.$/, '') : seconds.toFixed(1)}s`; },
+    clock(value) { const text = String(value || ''); if (!text.includes('T')) return text.length >= 19 ? text.slice(11, 19) : text; const date = new Date(text); return Number.isNaN(date.getTime()) ? text : [date.getHours(), date.getMinutes(), date.getSeconds()].map(part => String(part).padStart(2, '0')).join(':'); },
     formatValue(value) { return typeof value === 'string' ? value : JSON.stringify(value, null, 2); },
-    traceTime(offsetMs) { const date = new Date(this.testStartedAt + Number(offsetMs || 0)); return [date.getHours(), date.getMinutes(), date.getSeconds()].map(value => String(value).padStart(2, '0')).join(':'); },
-    async run() { this.error = ''; this.result = null; let payload; try { payload = parsePayload(this.payloadText); } catch (error) { this.error = error.message; return; } this.running = true; this.testStartedAt = Date.now(); try { this.result = await this.api.simulate(this.event.id, { version: this.version, payload }); this.$emit('tested'); } catch (error) { this.error = error.message || '模拟测试失败'; } finally { this.running = false; } },
+    traceTime(offsetMs) { const date = new Date(this.result?.startedAt || this.testStartedAt); date.setMilliseconds(date.getMilliseconds() + Number(offsetMs || 0)); return [date.getHours(), date.getMinutes(), date.getSeconds()].map(value => String(value).padStart(2, '0')).join(':'); },
+    async run() { this.error = ''; this.result = null; let payload; try { payload = parsePayload(this.payloadText); } catch (error) { this.error = error.message; return; } this.running = true; this.testStartedAt = Date.now(); try { this.result = await this.api.simulate(this.event.id, { version: this.version, payload }); this.$emit('tested'); } catch (error) { this.error = error.message || '运行测试失败'; } finally { this.running = false; } },
   },
 };
 </script>

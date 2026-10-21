@@ -15,6 +15,23 @@ export function createMockEventCenterApi() {
   const actionInput = (action, payload) => action.prompt
     ? action.prompt.replace(/\{\{([^}]+)\}\}/g, (_, key) => String(eventValue(payload, key.trim()) ?? `{{${key}}}`))
     : Object.fromEntries(Object.entries(action.params || {}).map(([key, value]) => [key, value.mode === 'event' ? eventValue(payload, value.value) : value.value]));
+  // Sample run data for the standalone frontend prototype. A backend adapter
+  // replaces these action results when the component is connected to services.
+  const sampleActionRun = (action, payload, started) => {
+    const resolvedInput = actionInput(action, payload);
+    const suffix = String(payload.event_id || 'TEST-0001').split('-').at(-1);
+    const durationMs = ({ 'repair-order': 1400, 'device-expert': 2000, 'device-alert': 2700, 'archive-flow': 480, 'alert-agent': 1800, 'send-notice': 420 }[action.resourceId]) || 750;
+    const output = {
+      'repair-order': { work_order_id: `WO-TEST-${suffix}`, priority: resolvedInput.priority || 'P1', status: '已创建' },
+      'device-expert': { diagnosis: '设备运行指标异常', recommendation: '检查设备状态并安排维护', risk_level: payload.status === 'critical' ? '严重' : '中' },
+      'device-alert': { alert_id: `AL-TEST-${suffix}`, level: payload.status === 'critical' ? 'critical' : 'warning', status: '已创建' },
+      'archive-flow': { archive_id: `ARC-TEST-${suffix}`, device_id: payload.device_id || null, status: '已归档' },
+      'alert-agent': { risk_level: '中', trend: '温度与电压指标需要持续关注', suggestion: '安排下一班次复核' },
+      'send-notice': { message_id: `MSG-TEST-${suffix}`, recipient: resolvedInput.recipient, status: '已发送' },
+      'order-review': { order_id: resolvedInput.orderId, checked: true },
+    }[action.resourceId] || { status: '执行成功', action: action.name, event_id: payload.event_id || null };
+    return { kind: action.kind, name: action.name, status: 'success', input: resolvedInput, output, startedAt: new Date(started + 30).toISOString(), finishedAt: new Date(started + 30 + durationMs).toISOString(), durationMs };
+  };
   const findEvent = id => {
     const event = events.find(item => String(item.id) === String(id) && !item.archived);
     if (!event) throw new Error('事件不存在或已删除');
@@ -155,10 +172,15 @@ export function createMockEventCenterApi() {
       const isDraft = input.version === 'draft';
       const snapshot = isDraft ? event.draft : event.versions.find(item => item.version === input.version);
       if (!snapshot) throw new Error('所选版本不存在');
+      const started = Date.now();
+      const startedAt = new Date(started).toISOString();
       const branch = selectBranch(snapshot.branches, input.payload);
+      const actions = clone(branch.actions).map(action => sampleActionRun(action, input.payload, started));
+      const result = !actions.length ? 'unconfigured' : actions.some(action => action.status === 'failure') ? 'failure' : 'success';
+      const durationMs = 130 + Math.max(0, ...actions.map(action => action.durationMs));
+      const finishedAt = new Date(started + durationMs).toISOString();
       if (isDraft) event.draft.tested = true;
       else snapshot.tested = true;
-      const actions = clone(branch.actions).map(action => ({ kind: action.kind, name: action.name, status: 'simulated', input: actionInput(action, input.payload), output: null }));
       const direct = snapshot.branches.length === 1 && branch.isDefault;
       const operators = { eq: '=', ne: '≠', gt: '>', gte: '≥', lt: '<', lte: '≤', contains: '包含', in: 'in' };
       const conditions = branch.conditions.map(condition => `${condition.field} ${operators[condition.operator] || condition.operator} ${condition.value}`).join(branch.logic === 'any' ? ' 或 ' : ' 且 ');
@@ -167,13 +189,16 @@ export function createMockEventCenterApi() {
         branch: branch.name,
         conditions: clone(branch.conditions),
         actions,
+        result,
+        startedAt,
+        finishedAt,
+        durationMs,
         trace: [
           { offsetMs: 0, title: '接收事件数据', detail: `JSON 解析成功 · ${Object.keys(input.payload).length} 个字段` },
-          { offsetMs: 18, title: `命中分支：${direct ? '直接处理' : branch.name}`, detail: branch.isDefault ? (direct ? '此流程直接处理所有事件。' : '未命中其他条件，进入默认分支。') : `命中条件：${conditions}` },
-          { offsetMs: 26, title: actions.length ? `模拟选择动作 · ${actions.length} 个并行` : '无执行动作', detail: actions.length ? '按命中分支列出动作，未调用真实服务。' : '此分支没有配置动作。' },
-          { offsetMs: 32, title: '本次模拟结束', detail: '仅模拟条件匹配和动作选择，不调用真实动作。' },
+          { offsetMs: 20, title: `命中分支：${direct ? '直接处理' : branch.name}`, detail: branch.isDefault ? (direct ? '此流程直接处理所有事件。' : '未命中其他条件，进入默认分支。') : `命中条件：${conditions}` },
+          { offsetMs: 30, title: actions.length ? `执行动作 · ${actions.length} 个并行触发` : '未配置执行动作', detail: actions.length ? '各动作独立记录执行结果与输入输出。' : '命中分支没有配置动作。' },
+          { offsetMs: durationMs, title: `本次处理结束 · ${result === 'success' ? '执行成功' : result === 'failure' ? '执行失败' : '未配置执行动作'}`, detail: `总耗时 ${(durationMs / 1000).toFixed(1)}s` },
         ],
-        note: '仅模拟条件判断和动作选择；没有调用真实动作，也没有生成运行记录。',
       };
     },
 
